@@ -69,6 +69,8 @@
 #include <linux/lockdep.h>
 #include <linux/nmi.h>
 #include <linux/psi.h>
+#include <linux/cpu_boost.h>
+#include <linux/devfreq_boost.h>
 
 #include <asm/sections.h>
 #include <asm/tlbflush.h>
@@ -4134,6 +4136,11 @@ retry:
 
 	if (fatal_signal_pending(current) && !(gfp_mask & __GFP_NOFAIL))
 		goto nopage;
+
+	/* Boost when memory is low so allocation latency doesn't get too bad */
+	input_boost_max_kick(250);
+	devfreq_boost_kick_max(DEVFREQ_MSM_LLCCBW, 250);
+	devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 250);
 
 	/* Try direct reclaim and then allocating */
 	page = __alloc_pages_direct_reclaim(gfp_mask, order, alloc_flags, ac,
