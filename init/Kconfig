@@ -1090,8 +1090,8 @@ config SCHED_TUNE
 
 	  If unsure, say N.
 
-config CPUSETS_ASSIST
-	bool "Cpusets configuration helper"
+config CPUSET_ASSIST
+	bool "Cpuset configuration helper"
 	depends on CPUSETS
 	depends on ANDROID
 	help
