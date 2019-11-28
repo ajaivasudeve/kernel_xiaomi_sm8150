@@ -39,8 +39,12 @@ static bool max_boost_active = false;
 
 static unsigned int max_boost_enabled = 1;
 module_param(max_boost_enabled, uint, 0644);
+static unsigned int frame_boost_enabled = 1;
+module_param(frame_boost_enabled, uint, 0644);
 static unsigned int input_boost_ms = 40;
 module_param(input_boost_ms, uint, 0644);
+static unsigned int frame_timeout = 5000;
+module_param(frame_timeout, uint, 0644);
 
 static struct delayed_work input_boost_rem;
 unsigned long last_input_time;
@@ -206,6 +210,16 @@ static void do_input_boost(struct work_struct *work)
 
 	queue_delayed_work(cpu_boost_wq, &input_boost_rem,
 					msecs_to_jiffies(input_boost_ms));
+}
+
+void frame_boost_kick(void)
+{
+	if (frame_boost_enabled < 1 || work_pending(&input_boost_work)
+				|| time_after(jiffies, last_input_time + msecs_to_jiffies(frame_timeout))) {
+		return;
+	}
+
+	queue_work(cpu_boost_wq, &input_boost_work);
 }
 
 static void do_input_boost_max(unsigned int duration_ms)
