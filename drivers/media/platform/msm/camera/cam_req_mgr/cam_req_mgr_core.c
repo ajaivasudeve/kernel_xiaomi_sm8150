@@ -930,6 +930,7 @@ static int __cam_req_mgr_check_sync_req_is_ready(
 	sync_rd_idx = sync_link->req.in_q->rd_idx;
 	sync_rd_slot = &sync_link->req.in_q->slot[sync_rd_idx];
 	sync_req_id = sync_rd_slot->req_id;
+	sync_rd_idx = sync_link->req.in_q->rd_idx;
 
 	CAM_DBG(CAM_REQ,
 		"link_hdl %x req %lld frame_skip_flag %d ",
