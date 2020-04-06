@@ -21,10 +21,12 @@
 #define MSM_DRM_EARLY_EVENT_BLANK		0x02
 
 enum {
-	/* panel: power on */
-	MSM_DRM_BLANK_UNBLANK,
-	/* panel: power off */
-	MSM_DRM_BLANK_POWERDOWN,
+	MSM_DRM_BLANK_UNBLANK, 		/* panel: power on */
+	MSM_DRM_BLANK_LP1,		/* low-power-mode: 1 */
+	MSM_DRM_BLANK_LP2,		/* low-power-mode: 2 */
+	MSM_DRM_BLANK_STANDBY,		/* panel-state: standby */
+	MSM_DRM_BLANK_SUSPEND,		/* panel-state: suspend */
+	MSM_DRM_BLANK_POWERDOWN, 	/* panel: power off */
 };
 
 enum msm_drm_display_id {
@@ -42,4 +44,5 @@ struct msm_drm_notifier {
 
 int msm_drm_register_client(struct notifier_block *nb);
 int msm_drm_unregister_client(struct notifier_block *nb);
+int msm_drm_notifier_call_chain(unsigned long val, void *v);
 #endif
