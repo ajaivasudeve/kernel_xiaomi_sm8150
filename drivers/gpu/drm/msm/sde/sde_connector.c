@@ -2321,7 +2321,7 @@ struct drm_connector *sde_connector_init(struct drm_device *dev,
 				pr_err("%s: request irq %d failed\n", __func__, dsi_display->panel->esd_config.esd_err_irq);
 					dsi_display->panel->esd_config.esd_err_irq = 0;
 			} else {
-				pr_info("%s: Request esd irq succeed!\n", __func__);
+				pr_debug("%s: Request esd irq succeed!\n", __func__);
 			}
 		}
 	}

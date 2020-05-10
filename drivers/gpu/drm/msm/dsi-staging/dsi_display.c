@@ -965,12 +965,12 @@ int dsi_display_read_panel(struct dsi_panel *panel, struct dsi_read_config *read
 		return -EINVAL;
 
 	if (!panel->panel_initialized) {
-		pr_info("Panel not initialized\n");
+		pr_debug("Panel not initialized\n");
 		return -EINVAL;
 	}
 
 	if (!read_config->enabled) {
-		pr_info("read operation was not permitted\n");
+		pr_debug("read operation was not permitted\n");
 		return -EPERM;
 	}
 
@@ -1013,8 +1013,8 @@ int dsi_display_read_panel(struct dsi_panel *panel, struct dsi_read_config *read
 	}
 
 	for (i = 0; i < read_config->cmds_rlen; i++) //debug
-		pr_info("0x%x ", read_config->rbuf[i]);
-	pr_info("\n");
+		pr_debug("0x%x ", read_config->rbuf[i]);
+	pr_debug("\n");
 
 exit:
 	dsi_display_cmd_engine_disable(display);
@@ -1249,7 +1249,7 @@ int dsi_display_set_power(struct drm_connector *connector,
         }
 
 	g_notify_data.data = &event;
-	pr_info("%s %d\n", __func__, event);
+	pr_debug("%s %d\n", __func__, event);
 	switch (power_mode) {
 	case SDE_MODE_DPMS_LP1:
 		msm_drm_notifier_call_chain(MSM_DRM_EARLY_EVENT_BLANK, &g_notify_data);
@@ -1517,7 +1517,7 @@ static ssize_t debugfs_esd_trigger_check(struct file *file,
 	display->esd_trigger = esd_trigger;
 
 	if (display->esd_trigger) {
-		pr_info("ESD attack triggered by user\n");
+		pr_debug("ESD attack triggered by user\n");
 		rc = dsi_panel_trigger_esd_attack(display->panel);
 		if (rc) {
 			pr_err("Failed to trigger ESD attack\n");
@@ -1574,13 +1574,13 @@ static ssize_t debugfs_alter_esd_check_mode(struct file *file,
 		goto error;
 
 	if (!strcmp(buf, "te_signal_check\n")) {
-		pr_info("ESD check is switched to TE mode by user\n");
+		pr_debug("ESD check is switched to TE mode by user\n");
 		esd_config->status_mode = ESD_MODE_PANEL_TE;
 		dsi_display_change_te_irq_status(display, true);
 	}
 
 	if (!strcmp(buf, "reg_read\n")) {
-		pr_info("ESD check is switched to reg read by user\n");
+		pr_debug("ESD check is switched to reg read by user\n");
 		rc = dsi_panel_parse_esd_reg_read_configs(display->panel);
 		if (rc) {
 			pr_err("failed to alter esd check mode,rc=%d\n",
@@ -4291,7 +4291,7 @@ static int _dsi_display_dyn_update_clks(struct dsi_display *display,
 			pr_err("wait4dynamic refresh failed for dsi:%d\n", i);
 			goto recover_pix_clk;
 		} else {
-			pr_info("dynamic refresh done on dsi: %s\n",
+			pr_debug("dynamic refresh done on dsi: %s\n",
 				i ? "slave" : "master");
 		}
 	}
@@ -4433,7 +4433,7 @@ static int dsi_display_dynamic_clk_configure_cmd(struct dsi_display *display,
 	}
 
 	if (clk_rate == display->cached_clk_rate) {
-		pr_info("%s: ignore duplicated DSI clk setting\n", __func__);
+		pr_debug("%s: ignore duplicated DSI clk setting\n", __func__);
 		return rc;
 	}
 
@@ -4441,7 +4441,7 @@ static int dsi_display_dynamic_clk_configure_cmd(struct dsi_display *display,
 
 	rc = dsi_display_update_dsi_bitrate(display, clk_rate);
 	if (!rc) {
-		pr_info("%s: bit clk is ready to be configured to '%d'\n",
+		pr_debug("%s: bit clk is ready to be configured to '%d'\n",
 				__func__, clk_rate);
 		atomic_set(&display->clkrate_change_pending, 1);
 	} else {
@@ -5050,7 +5050,7 @@ static int dsi_display_force_update_dsi_clk(struct dsi_display *display)
 	rc = dsi_display_link_clk_force_update_ctrl(display->dsi_clk_handle);
 
 	if (!rc) {
-		pr_info("dsi bit clk has been configured to %d\n",
+		pr_debug("dsi bit clk has been configured to %d\n",
 			display->cached_clk_rate);
 
 		atomic_set(&display->clkrate_change_pending, 0);
@@ -5117,7 +5117,7 @@ static ssize_t sysfs_dynamic_dsi_clk_write(struct device *dev,
 		return -ENOTSUPP;
 	}
 
-	pr_info("%s: bitrate param value: '%d'\n", __func__, clk_rate);
+	pr_debug("%s: bitrate param value: '%d'\n", __func__, clk_rate);
 
 	mutex_lock(&display->display_lock);
 	mutex_lock(&dsi_display_clk_mutex);
@@ -5409,7 +5409,7 @@ static int dsi_display_bind(struct device *dev,
 		goto error_host_deinit;
 	}
 
-	pr_info("Successfully bind display panel '%s'\n", display->name);
+	pr_debug("Successfully bind display panel '%s'\n", display->name);
 	display->drm_dev = drm;
 
 	display_for_each_ctrl(i, display) {
@@ -7673,11 +7673,11 @@ int dsi_display_enable(struct dsi_display *display)
 				pr_err("Read elvss_dimming_cmds failed, rc=%d\n", rc);
 				return 0;
 			}
-			pr_info("elvss dimming read result %x\n", panel->elvss_dimming_cmds.rbuf[0]);
+			pr_debug("elvss dimming read result %x\n", panel->elvss_dimming_cmds.rbuf[0]);
 			((u8 *)panel->hbm_fod_on.cmds[4].msg.tx_buf)[1] = (panel->elvss_dimming_cmds.rbuf[0]) & 0x7F;
-			pr_info("fod hbm on change to %x\n", ((u8 *)panel->hbm_fod_on.cmds[4].msg.tx_buf)[1]);
+			pr_debug("fod hbm on change to %x\n", ((u8 *)panel->hbm_fod_on.cmds[4].msg.tx_buf)[1]);
 			((u8 *)panel->hbm_fod_off.cmds[6].msg.tx_buf)[1] = panel->elvss_dimming_cmds.rbuf[0];
-			pr_info("fod hbm off change to %x\n", ((u8 *)panel->hbm_fod_off.cmds[6].msg.tx_buf)[1]);
+			pr_debug("fod hbm off change to %x\n", ((u8 *)panel->hbm_fod_off.cmds[6].msg.tx_buf)[1]);
 		}
 
 		dsi_panel_release_panel_lock(display->panel);
