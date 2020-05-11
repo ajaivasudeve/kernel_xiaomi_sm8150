@@ -4141,7 +4141,7 @@ static ssize_t select_pdo_store(struct device *dev,
 		goto out;
 	}
 
-	pr_info("pdo: %d, uv: %d, ua: %d\n", pdo, uv, ua);
+	pr_debug("pdo: %d, uv: %d, ua: %d\n", pdo, uv, ua);
 	ret = pd_select_pdo(pd, pdo, uv, ua);
 	if (ret)
 		goto out;

@@ -561,7 +561,7 @@ static const struct apsd_result *smblib_get_apsd_result(struct smb_charger *chg)
 			rc);
 		return result;
 	}
-  	smblib_err(chg, "read APSD_RESULT_STATUS stat=0x%x\n", stat);
+  	pr_debug("read APSD_RESULT_STATUS stat=0x%x\n", stat);
 	stat &= APSD_RESULT_STATUS_MASK;
 
 	for (i = 0; i < ARRAY_SIZE(smblib_apsd_results); i++) {
@@ -1306,7 +1306,7 @@ void smblib_suspend_on_debug_battery(struct smb_charger *chg)
 		vote(chg->usb_icl_votable, DEBUG_BOARD_VOTER, val.intval, 0);
 		vote(chg->dc_suspend_votable, DEBUG_BOARD_VOTER, val.intval, 0);
 		if (val.intval)
-			pr_info("Input suspended: Fake battery\n");
+			pr_debug("Input suspended: Fake battery\n");
 	} else {
 		vote(chg->chg_disable_votable, DEBUG_BOARD_VOTER,
 					val.intval, 0);
@@ -2612,9 +2612,9 @@ static int smblib_therm_charging(struct smb_charger *chg)
 			pr_err("Couldn't disable USB thermal ICL vote rc=%d\n",
 				rc);
 	} else {
-		pr_info("thermal_icl_ua is %d, chg->system_temp_level: %d\n",
+		pr_debug("thermal_icl_ua is %d, chg->system_temp_level: %d\n",
 				thermal_icl_ua, chg->system_temp_level);
-		pr_info("thermal_fcc_ua is %d\n", thermal_fcc_ua);
+		pr_debug("thermal_fcc_ua is %d\n", thermal_fcc_ua);
 
 		if (chg->real_charger_type == POWER_SUPPLY_TYPE_USB_HVDCP_3
 			|| (chg->cp_reason == POWER_SUPPLY_CP_PPS
@@ -3888,7 +3888,7 @@ bool smblib_rsbux_low(struct smb_charger *chg, int r_thr)
 		goto cleanup;
 	}
 
-	pr_info("r_sbu1 val is %d\n", r_sbu1);
+	pr_debug("r_sbu1 val is %d\n", r_sbu1);
 	if (r_sbu1 < r_thr) {
 		ret = true;
 		goto cleanup;
@@ -3907,7 +3907,7 @@ bool smblib_rsbux_low(struct smb_charger *chg, int r_thr)
 		goto cleanup;
 	}
 
-	pr_info("r_sbu2 val is %d\n", r_sbu2);
+	pr_debug("r_sbu2 val is %d\n", r_sbu2);
 	if (r_sbu2 < r_thr)
 		ret = true;
 cleanup:
@@ -5601,7 +5601,7 @@ unsuspend_input:
 
 		smblib_rerun_apsd(chg);
 
-		pr_info("qc2_unsupported charger detected\n");
+		pr_debug("qc2_unsupported charger detected\n");
 		rc = smblib_force_vbus_voltage(chg, FORCE_5V_BIT);
 		if (rc < 0)
 			pr_err("Failed to force 5V\n");
@@ -5971,7 +5971,7 @@ static void smblib_raise_qc3_vbus_work(struct work_struct *work)
 		}
 
 		usb_present = val.intval;
-		pr_info("usb_present is %d\n", usb_present);
+		pr_debug("usb_present is %d\n", usb_present);
 		if (!usb_present) {
 			chg->raise_vbus_to_detect = false;
 			rc = smblib_force_vbus_voltage(chg, FORCE_5V_BIT);
@@ -5984,7 +5984,7 @@ static void smblib_raise_qc3_vbus_work(struct work_struct *work)
 		if (rc < 0)
 			pr_err("Couldn't get usb voltage rc=%d\n", rc);
 		vbus_now = val.intval;
-		pr_info("vbus_now is %d\n", vbus_now);
+		pr_debug("vbus_now is %d\n", vbus_now);
 
 		if (chg->snk_debug_acc_detected && usb_present)
 			vol_qc_ab_thr = VOL_THR_FOR_QC_CLASS_AB
@@ -6120,7 +6120,7 @@ static void smblib_handle_hvdcp_3p0_auth_done(struct smb_charger *chg,
 
 	} else if (apsd_result->bit & QC_2P0_BIT
 			&& !chg->qc2_unsupported) {
-		pr_info("force 9V for QC2 charger\n");
+		pr_debug("force 9V for QC2 charger\n");
 		rc = smblib_force_vbus_voltage(chg, FORCE_9V_BIT);
 		if (rc < 0)
 			pr_err("Failed to force 9V\n");

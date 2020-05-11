@@ -2085,10 +2085,10 @@ static bool is_profile_load_required(struct fg_gen4_chip *chip)
 		if (!chip->dt.force_load_profile) {
 			pr_warn("Profiles doesn't match, skipping loading it since force_load_profile is disabled\n");
 			if (fg_profile_dump) {
-				pr_info("FG: loaded profile:\n");
+				pr_debug("FG: loaded profile:\n");
 				dump_sram(fg, buf, PROFILE_LOAD_WORD,
 					PROFILE_COMP_LEN);
-				pr_info("FG: available profile:\n");
+				pr_debug("FG: available profile:\n");
 				dump_sram(fg, chip->batt_profile,
 					PROFILE_LOAD_WORD, PROFILE_LEN);
 			}
@@ -2100,7 +2100,7 @@ static bool is_profile_load_required(struct fg_gen4_chip *chip)
 	} else {
 		fg_dbg(fg, FG_STATUS, "Profile integrity bit is not set\n");
 		if (fg_profile_dump) {
-			pr_info("FG: profile to be loaded:\n");
+			pr_debug("FG: profile to be loaded:\n");
 			dump_sram(fg, chip->batt_profile, PROFILE_LOAD_WORD,
 				PROFILE_LEN);
 		}
@@ -3346,7 +3346,7 @@ static irqreturn_t fg_vbatt_low_irq_handler(int irq, void *data)
 			fg->vbat_critical_low_count++;
 			if (fg->vbat_critical_low_count < EMPTY_DEBOUNCE_TIME_COUNT_MAX
 					&& vbatt_mv > VBAT_CRITICAL_LOW_THR) {
-				pr_info("fg->vbat_critical_low_count:%d\n",
+				pr_debug("fg->vbat_critical_low_count:%d\n",
 						fg->vbat_critical_low_count);
 				if (batt_psy_initialized(fg))
 					power_supply_changed(fg->batt_psy);
@@ -4207,7 +4207,7 @@ static int fg_restart_sysfs(const char *val, const struct kernel_param *kp)
 		return rc;
 	}
 
-	pr_info("FG restart done\n");
+	pr_debug("FG restart done\n");
 	return rc;
 }
 
@@ -4483,7 +4483,7 @@ static int fg_psy_set_property(struct power_supply *psy,
 		break;
 	case POWER_SUPPLY_PROP_CYCLE_COUNT:
 		rc = set_cycle_count(chip->counter, pval->intval);
-		pr_info("Cycle count is modified to %d by userspace\n", pval->intval);
+		pr_debug("Cycle count is modified to %d by userspace\n", pval->intval);
 		break;	
 	case POWER_SUPPLY_PROP_CLEAR_SOH:
 		if (chip->first_profile_load && !pval->intval) {
@@ -5824,7 +5824,7 @@ static void soc_work_fn(struct work_struct *work)
 	if (rc < 0)
 		pr_err("failed to get cycle count, rc=%d\n", rc);
 
-	pr_info("adjust_soc: s %d r %d i %d v %d t %d cc %d m 0x%02x\n",
+	pr_debug("adjust_soc: s %d r %d i %d v %d t %d cc %d m 0x%02x\n",
 			soc,
 			esr_uohms,
 			curr_ua/1000,
@@ -5874,7 +5874,7 @@ static void empty_restart_fg_work(struct work_struct *work)
 	/* only when usb is absent, restart fg */
 	if (!usb_present) {
 		if (fg->profile_load_status == PROFILE_LOADED) {
-			pr_info("soc empty after cold to warm, need to restart fg\n");
+			pr_debug("soc empty after cold to warm, need to restart fg\n");
 			fg->empty_restart_fg = true;
 			rc = fg_restart(fg, SOC_READY_WAIT_TIME_MS);
 			if (rc < 0) {
@@ -5882,7 +5882,7 @@ static void empty_restart_fg_work(struct work_struct *work)
 				fg->empty_restart_fg = false;
 				return;
 			}
-			pr_info("FG restart done\n");
+			pr_debug("FG restart done\n");
 			if (batt_psy_initialized(fg))
 				power_supply_changed(fg->batt_psy);
 		} else {
@@ -6191,7 +6191,7 @@ static int fg_gen4_probe(struct platform_device *pdev)
 
 	if (!rc) {
 		fg->last_batt_temp = batt_temp;
-		pr_info("battery SOC:%d voltage: %duV temp: %d id: %d ohms\n",
+		pr_debug("battery SOC:%d voltage: %duV temp: %d id: %d ohms\n",
 			msoc, volt_uv, batt_temp, fg->batt_id_ohms);
 	}
 
