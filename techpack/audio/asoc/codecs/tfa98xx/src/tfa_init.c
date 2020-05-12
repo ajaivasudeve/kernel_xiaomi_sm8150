@@ -820,7 +820,7 @@ static enum Tfa98xx_Error tfa9873_specific(struct tfa_device *tfa)
 		break;
 	}
 	error = tfa_set_bf_volatile(tfa, TFA9873_BF_FSSYNCEN, 0);
-	pr_info("info : disabled FS synchronisation! \n");
+	pr_debug("info : disabled FS synchronisation! \n");
 	return error;
 }
 void tfa9873_ops(struct tfa_device_ops *ops)
