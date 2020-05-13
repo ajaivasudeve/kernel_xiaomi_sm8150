@@ -4,7 +4,7 @@
  * Coypritht (c) 2017 Goodix
  */
 //#define DEBUG
-#define pr_fmt(fmt)     "gf_platform: " fmt
+#define pr_fmt(fmt) "gf_platform: " fmt
 
 #include <linux/delay.h>
 #include <linux/workqueue.h>
@@ -28,8 +28,8 @@ int gf_parse_dts(struct gf_dev *gf_dev)
 #ifdef GF_PW_CTL
 	int rc = 0;
 	/*get pwr resource*/
-	gf_dev->pwr_gpio = of_get_named_gpio(gf_dev->spi->dev.of_node, "fp-gpio-pwr",
-					     0);
+	gf_dev->pwr_gpio =
+		of_get_named_gpio(gf_dev->spi->dev.of_node, "fp-gpio-pwr", 0);
 
 	if (!gpio_is_valid(gf_dev->pwr_gpio)) {
 		pr_debug("PWR GPIO is invalid.\n");
@@ -39,7 +39,8 @@ int gf_parse_dts(struct gf_dev *gf_dev)
 	rc = gpio_request(gf_dev->pwr_gpio, "goodix_pwr");
 
 	if (rc) {
-		dev_err(&gf_dev->spi->dev, "Failed to request PWR GPIO. rc = %d\n", rc);
+		dev_err(&gf_dev->spi->dev,
+			"Failed to request PWR GPIO. rc = %d\n", rc);
 		return -1;
 	}
 
@@ -147,4 +148,3 @@ int gf_irq_num(struct gf_dev *gf_dev)
 		return gpio_to_irq(gf_dev->irq_gpio);
 	}
 }
-
