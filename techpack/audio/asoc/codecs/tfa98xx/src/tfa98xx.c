@@ -101,7 +101,7 @@ module_param(pcm_sample_format, int, S_IRUGO);
 MODULE_PARM_DESC(pcm_sample_format,
 		 "PCM sample format: 0=S16_LE, 1=S24_LE, 2=S32_LE, 3=dynamic\n");
 
-static int pcm_no_constraint = 0;
+static int pcm_no_constraint = 1;
 module_param(pcm_no_constraint, int, S_IRUGO);
 MODULE_PARM_DESC(pcm_no_constraint,
 		 "do not use constraints for PCM parameters\n");
@@ -121,6 +121,69 @@ struct tfa98xx_rate {
 static const struct tfa98xx_rate rate_to_fssel[] = {
 	{ 8000, 0 },  { 11025, 1 }, { 12000, 2 }, { 16000, 3 }, { 22050, 4 },
 	{ 24000, 5 }, { 32000, 6 }, { 44100, 7 }, { 48000, 8 },
+};
+
+static atomic_t g_bypass;
+static atomic_t g_Tx_enable;
+extern int send_tfa_cal_set_bypass(void *buf, int cmd_size);
+extern int send_tfa_cal_set_tx_enable(void *buf, int cmd_size);
+
+/*************bypass control***************/
+static int tfa987x_algo_get_status(struct snd_kcontrol *kcontrol,
+				   struct snd_ctl_elem_value *ucontrol)
+{
+	int32_t ret = 0;
+	ucontrol->value.integer.value[0] = atomic_read(&g_bypass);
+	return ret;
+}
+
+static int tfa987x_algo_set_status(struct snd_kcontrol *kcontrol,
+				   struct snd_ctl_elem_value *ucontrol)
+{
+	int32_t ret = 0;
+	u8 buff[56] = { 0 }, *ptr = buff;
+	((int32_t *)buff)[0] = ucontrol->value.integer.value[0];
+	pr_err("%s:status data %d\n", __func__, ((int32_t *)buff)[0]);
+	atomic_set(&g_bypass, ((int32_t *)buff)[0]);
+	ret = send_tfa_cal_set_bypass(ptr, 4);
+	return ret;
+}
+
+static int tfa987x_algo_set_tx_enable(struct snd_kcontrol *kcontrol,
+				      struct snd_ctl_elem_value *ucontrol)
+{
+	int32_t ret = 0;
+	u8 buff[56] = { 0 }, *ptr = buff;
+	((int32_t *)buff)[0] = ucontrol->value.integer.value[0];
+	pr_err("%s:set_tx_enable %d\n", __func__, ((int32_t *)buff)[0]);
+	atomic_set(&g_Tx_enable, ((int32_t *)buff)[0]);
+	ret = send_tfa_cal_set_tx_enable(ptr, 4);
+	return ret;
+}
+
+static int tfa987x_algo_get_tx_status(struct snd_kcontrol *kcontrol,
+				      struct snd_ctl_elem_value *ucontrol)
+{
+	int32_t ret = 0;
+	ucontrol->value.integer.value[0] = atomic_read(&g_Tx_enable);
+	return ret;
+}
+
+static const char *tfa987x_algo_text[] = { "DISABLE", "ENABLE" };
+
+static const char *tfa987x_tx_text[] = { "DISABLE", "ENABLE" };
+
+static const struct soc_enum tfa987x_algo_enum[] = { SOC_ENUM_SINGLE_EXT(
+	ARRAY_SIZE(tfa987x_algo_text), tfa987x_algo_text) };
+
+static const struct soc_enum tfa987x_tx_enum[] = { SOC_ENUM_SINGLE_EXT(
+	ARRAY_SIZE(tfa987x_tx_text), tfa987x_tx_text) };
+
+const struct snd_kcontrol_new tfa987x_algo_controls[] = {
+	SOC_ENUM_EXT("TFA987X_ALGO_STATUS", tfa987x_algo_enum[0],
+		     tfa987x_algo_get_status, tfa987x_algo_set_status),
+	SOC_ENUM_EXT("TFA987X_TX_ENABLE", tfa987x_tx_enum[0],
+		     tfa987x_algo_get_tx_status, tfa987x_algo_set_tx_enable)
 };
 
 static inline char *tfa_cont_profile_name(struct tfa98xx *tfa98xx, int prof_idx)
@@ -157,8 +220,10 @@ static enum tfa_error tfa98xx_tfa_start(struct tfa98xx *tfa98xx,
 	ktime_t start_time, stop_time;
 	u64 delta_time;
 
-	start_time = ktime_get_boottime();
-	err = tfa_dev_start(tfa98xx->tfa, next_profile, vstep);
+	if (trace_level & 8)
+		start_time = ktime_get_boottime();
+	err = tfa_dev_start(tfa98xx->tfa, next_profile, vstep,
+			    tfa98xx->pcm_format);
 
 	if (trace_level & 8) {
 		stop_time = ktime_get_boottime();
@@ -699,6 +764,8 @@ static ssize_t tfa98xx_dbgfs_fw_state_get(struct file *file,
 	return simple_read_from_buffer(user_buf, count, ppos, str, strlen(str));
 }
 
+extern int send_tfa_cal_apr(void *buf, int cmd_size, bool bRead);
+
 static ssize_t tfa98xx_dbgfs_rpc_read(struct file *file, char __user *user_buf,
 				      size_t count, loff_t *ppos)
 {
@@ -724,7 +791,11 @@ static ssize_t tfa98xx_dbgfs_rpc_read(struct file *file, char __user *user_buf,
 	}
 
 	mutex_lock(&tfa98xx->dsp_lock);
-	error = dsp_msg_read(tfa98xx->tfa, count, buffer);
+	if (tfa98xx->tfa->is_probus_device) {
+		error = send_tfa_cal_apr(buffer, count, true);
+	} else {
+		error = dsp_msg_read(tfa98xx->tfa, count, buffer);
+	}
 	mutex_unlock(&tfa98xx->dsp_lock);
 	if (error != Tfa98xx_Error_Ok) {
 		pr_debug("[0x%x] dsp_msg_read error: %d\n", tfa98xx->i2c->addr,
@@ -772,25 +843,34 @@ static ssize_t tfa98xx_dbgfs_rpc_send(struct file *file,
 	if (copy_from_user(msg_file->data, user_buf, count))
 		return -EFAULT;
 
-	mutex_lock(&tfa98xx->dsp_lock);
-	if ((msg_file->data[0] == 'M') && (msg_file->data[1] == 'G')) {
-		error = tfaContWriteFile(
-			tfa98xx->tfa, msg_file, 0,
-			0); /* int vstep_idx, int vstep_msg_idx both 0 */
+	if (tfa98xx->tfa->is_probus_device) {
+		mutex_lock(&tfa98xx->dsp_lock);
+		error = send_tfa_cal_apr(msg_file->data, msg_file->size, false);
 		if (error != Tfa98xx_Error_Ok) {
-			pr_debug("[0x%x] tfaContWriteFile error: %d\n",
-				 tfa98xx->i2c->addr, error);
+			pr_debug("[0x%x] dsp_msg error: %d\n", tfa98xx->i2c->addr, error);
 			err = -EIO;
 		}
+		mutex_unlock(&tfa98xx->dsp_lock);
+
+		mdelay(2);
 	} else {
-		error = dsp_msg(tfa98xx->tfa, msg_file->size, msg_file->data);
-		if (error != Tfa98xx_Error_Ok) {
-			pr_debug("[0x%x] dsp_msg error: %d\n",
-				 tfa98xx->i2c->addr, error);
-			err = -EIO;
+		mutex_lock(&tfa98xx->dsp_lock);
+		if ((msg_file->data[0] == 'M') && (msg_file->data[1] == 'G')) {
+			error = tfaContWriteFile(tfa98xx->tfa, msg_file, 0, 0); /* int vstep_idx, int vstep_msg_idx both 0 */
+			if (error != Tfa98xx_Error_Ok) {
+				pr_debug("[0x%x] tfaContWriteFile error: %d\n", tfa98xx->i2c->addr, error);
+				err = -EIO;
+			}
 		}
+		else {
+			error = dsp_msg(tfa98xx->tfa, msg_file->size, msg_file->data);
+			if (error != Tfa98xx_Error_Ok) {
+				pr_debug("[0x%x] dsp_msg error: %d\n", tfa98xx->i2c->addr, error);
+				err = -EIO;
+			}
+		}
+		mutex_unlock(&tfa98xx->dsp_lock);
 	}
-	mutex_unlock(&tfa98xx->dsp_lock);
 
 	kfree(msg_file);
 
@@ -1444,6 +1524,7 @@ static int tfa98xx_create_controls(struct tfa98xx *tfa98xx)
 	int prof, nprof, mix_index = 0;
 	int nr_controls = 0, id = 0;
 	char *name;
+	int ret = 0;
 	struct tfa98xx_baseprofile *bprofile;
 
 	/* Create the following controls:
@@ -1456,6 +1537,10 @@ static int tfa98xx_create_controls(struct tfa98xx *tfa98xx)
 
 	if (tfa98xx->flags & TFA98XX_FLAG_CALIBRATION_CTL)
 		nr_controls += 1; /* calibration */
+
+	if (tfa98xx->tfa->tfa_family == 2) {
+		nr_controls++; /* Playback Volume control */
+	}
 
 	/* allocate the tfa98xx_controls base on the nr of profiles */
 	nprof = tfa_cnt_get_dev_nprof(tfa98xx->tfa);
@@ -1585,8 +1670,13 @@ static int tfa98xx_create_controls(struct tfa98xx *tfa98xx)
 	return snd_soc_add_component_controls(tfa98xx->codec, tfa98xx_controls,
 					      mix_index);
 #else
-	return snd_soc_add_codec_controls(tfa98xx->codec, tfa98xx_controls,
-					  mix_index);
+	ret = snd_soc_add_codec_controls(tfa98xx->codec, tfa98xx_controls,
+					 mix_index);
+
+	ret = snd_soc_add_codec_controls(tfa98xx->codec, tfa987x_algo_controls,
+					 ARRAY_SIZE(tfa987x_algo_controls));
+
+	return ret;
 #endif
 }
 
@@ -2439,8 +2529,10 @@ static void tfa98xx_interrupt(struct work_struct *work)
 		int start_triggered;
 
 		mutex_lock(&tfa98xx->dsp_lock);
-		start_triggered = tfa_plop_noise_interrupt(
-			tfa98xx->tfa, tfa98xx->profile, tfa98xx->vstep);
+		start_triggered =
+			tfa_plop_noise_interrupt(tfa98xx->tfa, tfa98xx->profile,
+						 tfa98xx->vstep,
+						 tfa98xx->pcm_format);
 		/* Only enable when the return value is 1, otherwise the interrupt is triggered twice */
 		if (start_triggered)
 			tfa98xx_interrupt_enable(tfa98xx, true);
@@ -2661,7 +2753,72 @@ static int tfa98xx_hw_params(struct snd_pcm_substream *substream,
 	/* update to new rate */
 	tfa98xx->rate = rate;
 
+	tfa98xx->pcm_format = snd_pcm_format_width(params_format(params));
+
 	return 0;
+}
+
+extern int send_tfa_cal_in_band(void *buf, int cmd_size);
+static uint8_t bytes[3 * 3 + 1] = { 0 };
+
+enum Tfa98xx_Error tfa98xx_adsp_send_calib_values(struct tfa98xx *tfa98xx)
+{
+	int ret = 0;
+	struct tfa_device *tfa = tfa98xx->tfa;
+	int value = 0, nr, dsp_cal_value = 0;
+
+	/* If calibration is set to once we load from MTP, else send zero's */
+	if (TFA_GET_BF(tfa, MTPEX) == 1 && tfa98xx->i2c->addr == 0x34) {
+		value = tfa_dev_mtp_get(tfa, TFA_MTP_RE25);
+		dsp_cal_value = (value * 65536) / 1000;
+
+		nr = 4;
+		/* We have to copy it for both channels. Even when mono! */
+		bytes[nr++] = (uint8_t)((dsp_cal_value >> 16) & 0xff);
+		bytes[nr++] = (uint8_t)((dsp_cal_value >> 8) & 0xff);
+		bytes[nr++] = (uint8_t)(dsp_cal_value & 0xff);
+
+		dev_err(&tfa98xx->i2c->dev, "%s: cal value 0x%x\n", __func__,
+			dsp_cal_value);
+
+		/* Receiver RDC */
+		if (value > 20000)
+			bytes[0] |= 0x01;
+	}
+
+	if (TFA_GET_BF(tfa, MTPEX) == 1 && tfa98xx->i2c->addr == 0x35) {
+		value = tfa_dev_mtp_get(tfa, TFA_MTP_RE25);
+		dsp_cal_value = (value * 65536) / 1000;
+
+		nr = 7;
+		/* We have to copy it for both channels. Even when mono! */
+		bytes[nr++] = (uint8_t)((dsp_cal_value >> 16) & 0xff);
+		bytes[nr++] = (uint8_t)((dsp_cal_value >> 8) & 0xff);
+		bytes[nr++] = (uint8_t)(dsp_cal_value & 0xff);
+
+		dev_err(&tfa98xx->i2c->dev, "%s: cal value 0x%x\n", __func__,
+			dsp_cal_value);
+
+		/* Speaker RDC */
+		if (value > 4000)
+			bytes[0] |= 0x10;
+	}
+
+	if (bytes[0] == 0x11) {
+		nr = 1;
+		bytes[nr++] = 0x00;
+		bytes[nr++] = 0x81;
+		bytes[nr++] = 0x05;
+
+		dev_err(&tfa98xx->i2c->dev, "%s: send_tfa_cal_in_band \n",
+			__func__);
+
+		ret = send_tfa_cal_in_band(&bytes[1], sizeof(bytes) - 1);
+
+		bytes[0] = 0;
+	}
+
+	return ret;
 }
 
 static int tfa98xx_mute(struct snd_soc_dai *dai, int mute, int stream)
@@ -2674,6 +2831,9 @@ static int tfa98xx_mute(struct snd_soc_dai *dai, int mute, int stream)
 	struct tfa98xx *tfa98xx = snd_soc_codec_get_drvdata(codec);
 #endif
 	dev_dbg(&tfa98xx->i2c->dev, "%s: state: %d\n", __func__, mute);
+
+	atomic_set(&g_bypass, 0);
+	atomic_set(&g_Tx_enable, 0);
 
 	if (no_start) {
 		pr_debug(
@@ -2708,12 +2868,21 @@ static int tfa98xx_mute(struct snd_soc_dai *dai, int mute, int stream)
 		if (tfa98xx->flags & TFA98XX_FLAG_ADAPT_NOISE_MODE)
 			cancel_delayed_work_sync(&tfa98xx->nmodeupdate_work);
 	} else {
-		if (stream == SNDRV_PCM_STREAM_PLAYBACK)
+		if (stream == SNDRV_PCM_STREAM_PLAYBACK) {
 			tfa98xx->pstream = 1;
-		else
-			tfa98xx->cstream = 1;
+			tfa98xx_adsp_send_calib_values(tfa98xx);
 
 			/* Start DSP */
+			if (tfa98xx->dsp_init != TFA98XX_DSP_INIT_PENDING) {
+				queue_delayed_work(tfa98xx->tfa98xx_wq,
+						   &tfa98xx->init_work, 0);
+				return 0;
+			}
+		} else {
+			tfa98xx->cstream = 1;
+		}
+
+		/* Start DSP */
 #if 1
 		if (tfa98xx->dsp_init != TFA98XX_DSP_INIT_PENDING)
 			queue_delayed_work(tfa98xx->tfa98xx_wq,

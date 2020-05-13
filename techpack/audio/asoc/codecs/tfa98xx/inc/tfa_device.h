@@ -226,7 +226,8 @@ int tfa_dev_probe(int slave, struct tfa_device *tfa);
  *  @param vstep the selected vstep to use
  *  @return tfa_error enum
  */
-enum tfa_error tfa_dev_start(struct tfa_device *tfa, int profile, int vstep);
+enum tfa_error tfa_dev_start(struct tfa_device *tfa, int next_profile,
+			     int vstep, u8 pcm_format);
 
 /**
  * Stop audio for this instance as gracefully as possible.
