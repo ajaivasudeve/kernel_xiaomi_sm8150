@@ -32,6 +32,7 @@ enum print_reason {
 	PR_PARALLEL	= BIT(3),
 	PR_OTG		= BIT(4),
 	PR_WLS		= BIT(5),
+	PR_OEM		= BIT(6),
 };
 
 #define DEFAULT_VOTER			"DEFAULT_VOTER"
@@ -99,8 +100,8 @@ enum print_reason {
 #define SDP_100_MA			100000
 #define SDP_CURRENT_UA			500000
 #define CDP_CURRENT_UA			1500000
-#define DCP_CURRENT_UA			1500000
-#define HVDCP_CURRENT_UA		3000000
+#define DCP_CURRENT_UA			1600000
+#define HVDCP_CURRENT_UA		2800000
 #define TYPEC_DEFAULT_CURRENT_UA	900000
 #define TYPEC_MEDIUM_CURRENT_UA		1500000
 #define TYPEC_HIGH_CURRENT_UA		3000000
@@ -109,6 +110,44 @@ enum print_reason {
 #define DCIN_ICL_STEP_UA		100000
 
 #define ROLE_REVERSAL_DELAY_MS		2000
+
+#define OTG_VOTER			"OTG_VOTER"
+#define CHG_AWAKE_VOTER			"CHG_AWAKE_VOTER"
+#define CLASSA_QC_FCC_VOTER		"CLASSA_QC_FCC_VOTER"
+#define QC_A_CP_ICL_MAX_VOTER		"QC_A_CP_ICL_MAX_VOTER"
+#define JEITA_VOTER		"JEITA_VOTER"
+#define QC2_UNSUPPORTED_VOTER		"QC2_UNSUPPORTED_VOTER"
+#define PD_VERIFED_VOTER		"PD_VERIFED_VOTER"
+#define VOL_THR_FOR_QC_CLASS_AB		12300000
+#define COMP_FOR_LOW_RESISTANCE_CABLE	100000
+#define QC_CLASS_A_CURRENT_UA		3600000
+#define HVDCP_CLASS_A_MAX_UA		2500000
+#define HVDCP_CLASS_A_FOR_CP_UA		2000000
+#define MAX_PULSE			38
+#define MAX_PLUSE_COUNT_ALLOWED		30
+#define HIGH_NUM_PULSE_THR		12
+#define PD_UNVERIFED_CURRENT		3000000
+#define MAX_TEMP_LEVEL		16
+#define PD_6P5V_PERCENT		85
+#define PD_7P5V_PERCENT		75
+#define PD_8P5V_PERCENT		70
+#define PD_9V_PERCENT		65
+#define PD_MICRO_5V		5000000
+#define PD_MICRO_5P9V	5900000
+#define PD_MICRO_6P5V	6500000
+#define PD_MICRO_7P5V	7500000
+#define PD_MICRO_8P5V	8500000
+#define PD_MICRO_9V		9000000
+#define ICL_LIMIT_LEVEL_THR		8
+#define QC2_UNSUPPORTED_UA		1800000
+#define HVDCP2_CURRENT_UA		1500000
+#define CHARGER_RECHECK_DELAY_MS	30000
+#define TYPE_RECHECK_TIME_5S	5000
+#define TYPE_RECHECK_COUNT	3
+#define CC_UN_COMPLIANT_START_DELAY_MS	700
+#define CUTOFF_VOL_THR		3400000
+#define RSBU_K_300K_UV	3000000
+#define RECHARGE_SOC_THR		99
 
 enum smb_mode {
 	PARALLEL_MASTER = 0,
@@ -243,6 +282,25 @@ enum comp_clamp_levels {
 	CLAMP_LEVEL_DEFAULT = 0,
 	CLAMP_LEVEL_1,
 	MAX_CLAMP_LEVEL,
+};
+
+enum hvdcp3_type {
+	HVDCP3_NONE = 0,
+	HVDCP3_CLASSA_18W,
+	HVDCP3_CLASSB_27W,
+};
+
+enum quick_charge_type {
+	QUICK_CHARGE_NORMAL = 0,
+	QUICK_CHARGE_FAST,
+	QUICK_CHARGE_FLASH,
+	QUICK_CHARGE_TURBE,
+	QUICK_CHARGE_MAX,
+};
+
+struct quick_charge {
+	enum power_supply_type adap_type;
+	enum quick_charge_type adap_cap;
 };
 
 struct clamp_config {
@@ -411,6 +469,7 @@ struct smb_charger {
 	struct power_supply		*usb_port_psy;
 	struct power_supply		*wls_psy;
 	struct power_supply		*cp_psy;
+	struct power_supply_desc		usb_psy_desc;
 	enum power_supply_type		real_charger_type;
 
 	/* dual role class */
@@ -468,6 +527,11 @@ struct smb_charger {
 	struct delayed_work	role_reversal_check;
 	struct delayed_work	pr_swap_detach_work;
 	struct delayed_work	pr_lock_clear_work;
+	struct delayed_work	raise_qc3_vbus_work;
+	struct delayed_work	charger_type_recheck;
+	struct delayed_work	cc_un_compliant_charge_work;
+	struct delayed_work	reg_work;
+
 
 	struct alarm		lpd_recheck_timer;
 	struct alarm		moisture_protection_alarm;
@@ -487,6 +551,7 @@ struct smb_charger {
 	int			voltage_min_uv;
 	int			voltage_max_uv;
 	int			pd_active;
+	int			pd_verifed;	
 	bool			pd_hard_reset;
 	bool			pr_lock_in_progress;
 	bool			pr_swap_in_progress;
@@ -495,13 +560,25 @@ struct smb_charger {
 	bool			typec_legacy;
 	bool			typec_irq_en;
 	bool			typec_role_swap_failed;
+	bool			batt_temp_irq_enabled;	
 
 	/* cached status */
 	bool			system_suspend_supported;
 	int			boost_threshold_ua;
 	int			system_temp_level;
 	int			thermal_levels;
+#ifdef CONFIG_THERMAL
+	int 		*thermal_mitigation_dcp;
+	int 		*thermal_mitigation_qc2;
+	int 		*thermal_mitigation_pd_base;
+	int 		*thermal_mitigation_icl;
+	int 		*thermal_fcc_qc3_normal;
+	int 		*thermal_fcc_qc3_cp;
+	int 		*thermal_fcc_qc3_classb_cp;
+	int 		*thermal_fcc_pps_cp;
+#else	
 	int			*thermal_mitigation;
+#endif
 	int			dcp_icl_ua;
 	int			fake_capacity;
 	int			fake_batt_status;
@@ -554,6 +631,7 @@ struct smb_charger {
 	bool			hw_connector_mitigation;
 	bool			hw_skin_temp_mitigation;
 	bool			en_skin_therm_mitigation;
+	bool			report_usb_absent;	
 	int			connector_pull_up;
 	int			smb_pull_up;
 	int			aicl_5v_threshold_mv;
@@ -581,6 +659,8 @@ struct smb_charger {
 	int                     qc2_max_pulses;
 	enum qc2_non_comp_voltage qc2_unsupported_voltage;
 	bool			dbc_usbov;
+	bool			fake_usb_insertion;
+	bool			qc2_unsupported;	
 
 	/* extcon for VBUS / ID notification to USB for uUSB */
 	struct extcon_dev	*extcon;
@@ -595,6 +675,14 @@ struct smb_charger {
 	int			die_health;
 	int			connector_health;
 
+	/* raise qc3 vbus flag */
+	bool			qc_class_ab;
+	bool			is_qc_class_a;
+	bool			is_qc_class_b;
+	bool			raise_vbus_to_detect;
+	bool			detect_low_power_qc3_charger;
+	bool			high_vbus_detected;	
+
 	/* flash */
 	u32			flash_derating_soc;
 	u32			flash_disable_soc;
@@ -607,6 +695,14 @@ struct smb_charger {
 	int			dcin_uv_count;
 	ktime_t			dcin_uv_last_time;
 	int			last_wls_vout;
+
+	/* charger type recheck */
+	int			recheck_charger;
+	int			precheck_charger_type;
+
+	/* workarounds */
+	bool			cc_un_compliant_detected;
+	bool			snk_debug_acc_detected;
 };
 
 int smblib_read(struct smb_charger *chg, u16 addr, u8 *val);
@@ -817,4 +913,9 @@ int smblib_get_qc3_main_icl_offset(struct smb_charger *chg, int *offset_ua);
 
 int smblib_init(struct smb_charger *chg);
 int smblib_deinit(struct smb_charger *chg);
+int smblib_set_prop_type_recheck(struct smb_charger *chg,
+				 const union power_supply_propval *val);
+int smblib_get_prop_type_recheck(struct smb_charger *chg,
+				 union power_supply_propval *val);
+int smblib_get_quick_charge_type(struct smb_charger *chg);
 #endif /* __SMB5_CHARGER_H */

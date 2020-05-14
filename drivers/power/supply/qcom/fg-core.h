@@ -94,6 +94,15 @@
 #define ESR_SOH_SOC			50
 #define EMPTY_SOC			0
 
+#define FULL_SOC_REPORT_THR		250
+#define VBAT_RESTART_FG_EMPTY_UV		3700000
+#define TEMP_THR_RESTART_FG		150
+#define RESTART_FG_START_WORK_MS		1000
+#define RESTART_FG_WORK_MS		2000
+#define EMPTY_REPORT_SOC		1
+#define VBAT_CRITICAL_LOW_THR		2800
+#define EMPTY_DEBOUNCE_TIME_COUNT_MAX		5	
+
 enum prof_load_status {
 	PROFILE_MISSING,
 	PROFILE_LOADED,
@@ -316,6 +325,7 @@ struct fg_batt_props {
 	int		therm_pull_up_kohms;
 	int		*rslow_normal_coeffs;
 	int		*rslow_low_coeffs;
+	int		nom_cap_uah;
 };
 
 struct fg_cyc_ctr_data {
@@ -450,6 +460,8 @@ struct fg_dev {
 	int			delta_soc;
 	int			last_msoc;
 	int			last_recharge_volt_mv;
+	int			vbatt_full_volt_uv;
+	int			vbat_critical_low_count;
 	bool			profile_available;
 	enum prof_load_status	profile_load_status;
 	bool			battery_missing;
@@ -460,12 +472,17 @@ struct fg_dev {
 	bool			use_ima_single_mode;
 	bool			use_dma;
 	bool			qnovo_enable;
+	bool			report_full;
+	bool			empty_restart_fg;
+	bool			input_present;
 	enum fg_version		version;
 	struct completion	soc_update;
 	struct completion	soc_ready;
 	struct delayed_work	profile_load_work;
 	struct work_struct	status_change_work;
 	struct delayed_work	sram_dump_work;
+	struct delayed_work	empty_restart_fg_work;
+	struct delayed_work	soc_work;
 };
 
 /* Debugfs data structures are below */
