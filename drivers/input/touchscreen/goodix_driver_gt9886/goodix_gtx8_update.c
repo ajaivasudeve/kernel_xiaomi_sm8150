@@ -237,13 +237,13 @@ static int goodix_parse_firmware(struct firmware_data *fw_data)
 		fw_offset += fw_info->subsys[i].size;
 	}
 
-	ts_info("Firmware package protocol: V%u", fw_info->protocol_ver);
-	ts_info("Fimware PID:GT%s", fw_info->fw_pid);
-	ts_info("Fimware VID:0x%02X %02X %02X %02x", fw_info->fw_vid[0],
+	ts_debug("Firmware package protocol: V%u", fw_info->protocol_ver);
+	ts_debug("Fimware PID:GT%s", fw_info->fw_pid);
+	ts_debug("Fimware VID:0x%02X %02X %02X %02x", fw_info->fw_vid[0],
 			fw_info->fw_vid[1], fw_info->fw_vid[2], fw_info->fw_vid[3]);
-	ts_info("Firmware chip type:0x%02X", fw_info->chip_type);
-	ts_info("Firmware size:%u", fw_info->size);
-	ts_info("Firmware subsystem num:%u", fw_info->subsys_num);
+	ts_debug("Firmware chip type:0x%02X", fw_info->chip_type);
+	ts_debug("Firmware size:%u", fw_info->size);
+	ts_debug("Firmware subsystem num:%u", fw_info->subsys_num);
 #ifdef CONFIG_GOODIX_DEBUG
 	for (i = 0; i < fw_info->subsys_num; i++) {
 		ts_debug("------------------------------------------");
@@ -283,27 +283,27 @@ static int goodix_check_update(struct goodix_ts_device *dev,
 		return r;
 
 	if (fw_ver.valid) {
-		ts_info("pid_len=%d\n",dev->reg.pid_len);
-		ts_info("tp.pid=%s fw.pid=%s\n",fw_ver.pid,fw_info->fw_pid);
+		ts_debug("pid_len=%d\n",dev->reg.pid_len);
+		ts_debug("tp.pid=%s fw.pid=%s\n",fw_ver.pid,fw_info->fw_pid);
 		if (memcmp(fw_ver.pid, fw_info->fw_pid, dev->reg.pid_len)) {
 			ts_err("tp.pid=0x%x fw.pid=0x%x\n",fw_ver.pid,fw_info->fw_pid);
 			ts_err("Product ID is not match");
 			return -EPERM;
 		}
 
-		ts_info("vid_len=%d\n",dev->reg.vid_len);
-		ts_info("Touchpanel VID:0x%02x 0x%02x 0x%02x 0x%02x",fw_ver.vid[0], fw_ver.vid[1], fw_ver.vid[2], fw_ver.vid[3]);
-		ts_info("Fimware    VID:0x%02X 0x%02x 0x%02x 0x%02x", fw_info->fw_vid[0], fw_info->fw_vid[1], fw_info->fw_vid[2], fw_info->fw_vid[3]);
+		ts_debug("vid_len=%d\n",dev->reg.vid_len);
+		ts_debug("Touchpanel VID:0x%02x 0x%02x 0x%02x 0x%02x",fw_ver.vid[0], fw_ver.vid[1], fw_ver.vid[2], fw_ver.vid[3]);
+		ts_debug("Fimware    VID:0x%02X 0x%02x 0x%02x 0x%02x", fw_info->fw_vid[0], fw_info->fw_vid[1], fw_info->fw_vid[2], fw_info->fw_vid[3]);
 		res = memcmp(fw_ver.vid, fw_info->fw_vid, dev->reg.vid_len);
 		if (res == 0) {
 			ts_err("FW version is equal to the IC's");
 			return -EPERM;
 		} else {
-			ts_info("tp version not equal firmware version\n");
+			ts_debug("tp version not equal firmware version\n");
 		}
 	} /* else invalid firmware, update firmware */
 
-	ts_info("Firmware needs to be updated");
+	ts_debug("Firmware needs to be updated");
 	return 0;
 }
 
@@ -383,7 +383,7 @@ static int goodix_load_isp(struct goodix_ts_device *ts_dev,
 	int i;
 
 	fw_isp = &fw_data->fw_info.subsys[0];
-	ts_info("Loading ISP start");
+	ts_debug("Loading ISP start");
 	/* select bank0 */
 	reg_val[0] = 0x00;
 	r = goodix_reg_write(ts_dev, HW_REG_BANK_SELECT, reg_val, 1);
@@ -453,7 +453,7 @@ static int goodix_load_isp(struct goodix_ts_device *ts_dev,
 		usleep_range(5000, 5100);
 	}
 	if (reg_val[0] == 0xAA && reg_val[1] == 0xBB) {
-		ts_info("ISP working OK");
+		ts_debug("ISP working OK");
 		return 0;
 	} else {
 		ts_err("ISP not work,0x%x=0x%x, 0x%x=0x%x",
@@ -481,7 +481,7 @@ static int goodix_update_prepare(struct fw_update_ctrl *fwu_ctrl)
 
 	/*reset IC*/
 	fwu_ctrl->allow_reset = true;
-	ts_info("normandy firmware update, reset");
+	ts_debug("normandy firmware update, reset");
 	gpio_direction_output(ts_dev->board_data->reset_gpio, 0);
 	udelay(2000);
 	gpio_direction_output(ts_dev->board_data->reset_gpio, 1);
@@ -499,7 +499,7 @@ static int goodix_update_prepare(struct fw_update_ctrl *fwu_ctrl)
 		reg_val[0] = 0x24;
 		r = goodix_reg_write_confirm(ts_dev, HW_REG_CPU_CTRL, reg_val, 1);
 		if (r < 0) {
-			ts_info("Failed to hold ss51, retry");
+			ts_debug("Failed to hold ss51, retry");
 			msleep(20);
 		} else {
 			break;
@@ -647,9 +647,9 @@ static int goodix_send_fw_packet(struct goodix_ts_device *dev, u8 type,
 				if (r) {
 					ts_err("Read back compare failed");
 				} else {
-					ts_info("Read back compare OK");
+					ts_debug("Read back compare OK");
 				}*/
-				ts_info("Flash subsystem ok");
+				ts_debug("Flash subsystem ok");
 				return 0;
 			}
 		}
@@ -706,7 +706,7 @@ static int goodix_flash_subsystem(struct goodix_ts_device *dev,
 	while (total_size > 0) {
 		data_size = total_size > ISP_MAX_BUFFERSIZE ?
 				ISP_MAX_BUFFERSIZE : total_size;
-		ts_info("Flash firmware to %08x,size:%u bytes",
+		ts_debug("Flash firmware to %08x,size:%u bytes",
 			subsys_base_addr + offset, data_size);
 
 		/* format one firmware packet */
@@ -763,11 +763,11 @@ static int goodix_flash_firmware(struct goodix_ts_device *dev,
 	prog_step = 80 / (fw_num - 1);
 
 	for (i = 1; i < fw_num && retry;) {
-		ts_info("--- Start to flash subsystem[%d] ---", i);
+		ts_debug("--- Start to flash subsystem[%d] ---", i);
 		fw_x = &fw_info->subsys[i];
 		r = goodix_flash_subsystem(dev, fw_x);
 		if (r == 0) {
-			ts_info("--- End flash subsystem[%d]: OK ---", i);
+			ts_debug("--- End flash subsystem[%d]: OK ---", i);
 			fw_ctrl->progress += prog_step;
 			i++;
 		} else if (r == -EAGAIN) {
@@ -897,7 +897,7 @@ err_fw_prepare:
 err_check_update:
 err_parse_fw:
 	if (fwu_ctrl->status == UPSTA_SUCCESS)
-		ts_info("Firmware update successfully");
+		ts_debug("Firmware update successfully");
 	else if (fwu_ctrl->status == UPSTA_FAILED)
 		ts_err("Firmware update failed");
 	fwu_ctrl->progress = 100; /* 100% */
@@ -922,13 +922,13 @@ static int goodix_request_firmware(struct firmware_data *fw_data,
 	struct device *dev = fw_ctrl->ts_dev->dev;
 	int r;
 
-	ts_info("Request firmware image [%s]", name);
+	ts_debug("Request firmware image [%s]", name);
 	r = request_firmware(&fw_data->firmware, name, dev);
-	ts_info("Request firmware r = %d\n", r);
+	ts_debug("Request firmware r = %d\n", r);
 	if (r < 0)
 		ts_err("Firmware image [%s] not available,errno:%d", name, r);
 	else
-		ts_info("Firmware image [%s] is ready", name);
+		ts_debug("Firmware image [%s] is ready", name);
 	return r;
 }
 
@@ -961,7 +961,7 @@ static int goodix_fw_update_thread(void *data)
 	mutex_lock(&fwu_lock);
 	if (!fwu_ctrl->fw_from_sysfs) {
 		if (atomic_read(&fw_update_mode) == 0) {
-			ts_info("goodix Firmware header update starts");
+			ts_debug("goodix Firmware header update starts");
 			temp_firmware = kzalloc(sizeof(struct firmware), GFP_KERNEL);
 			if (!temp_firmware) {
 				ts_err("Failed to allocate memory for firmware");
@@ -971,7 +971,7 @@ static int goodix_fw_update_thread(void *data)
 			temp_firmware->data = goodix_default_fw;
 			fwu_ctrl->fw_data.firmware = temp_firmware;
 		} else if (atomic_read(&fw_update_mode) == 1) {
-			ts_info("goodix Firmware request update starts");
+			ts_debug("goodix Firmware request update starts");
 			r = goodix_request_firmware(&fwu_ctrl->fw_data, fwu_ctrl->fw_name);
 			if (r < 0) {
 				fwu_ctrl->status = UPSTA_ABORT;
@@ -1063,7 +1063,7 @@ static ssize_t goodix_sysfs_update_result_show(
 	char *result = NULL;
 	struct fw_update_ctrl *fw_ctrl = module->priv_data;
 
-	ts_info("result show");
+	ts_debug("result show");
 	switch (fw_ctrl->status) {
 	case UPSTA_NOTWORK:
 		result = "notwork";
@@ -1268,10 +1268,10 @@ static int goodix_fw_update_init(struct goodix_ts_core *core_data,
 	/* find a valid firmware image name */
 	if (ts_bdata && ts_bdata->fw_name){
 		strlcpy(fwu_ctrl->fw_name, ts_bdata->fw_name, sizeof(fwu_ctrl->fw_name));
-		ts_info("find goodix firmware:%s\n",ts_bdata->fw_name);
+		ts_debug("find goodix firmware:%s\n",ts_bdata->fw_name);
 	}else{
 		strlcpy(fwu_ctrl->fw_name, TS_DEFAULT_FIRMWARE, sizeof(fwu_ctrl->fw_name));
-		ts_info("can't find goodix firmware,use default name\n");
+		ts_debug("can't find goodix firmware,use default name\n");
 	}
 
 	/* create sysfs interface */

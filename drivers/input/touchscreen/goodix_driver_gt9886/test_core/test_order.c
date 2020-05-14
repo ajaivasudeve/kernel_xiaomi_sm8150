@@ -819,14 +819,14 @@ extern s32 header_file_init_dev(PST_TP_DEV p_tp_dev, u8 *cfg,
 }
 
 /*******************************************************************************
-* Function Name	: parse_init_dev_info
+* Function Name	: parse_init_dev_dbg
 * Description	: parse device info from order
 * Input			: PST_TP_DEV p_tp_dev
 				: PST_TEST_PARAM p_test_parm
 * Output		: PST_TP_DEV p_tp_dev
 * Return		: s32(0:fail 1:ok)
 *******************************************************************************/
-extern s32 parse_init_dev_info(PST_TP_DEV p_tp_dev,
+extern s32 parse_init_dev_dbg(PST_TP_DEV p_tp_dev,
 				PST_TEST_PARAM p_test_param)
 {
 	s32 ret = 1;
@@ -2674,7 +2674,7 @@ extern int parse_test_order(PST_TEST_PARAM *pp_test_param,
 		goto PARSE_END;
 	}
 	/*(2)init tp ev struct*/
-	ret = parse_init_dev_info(p_tp_dev, p_test_param);
+	ret = parse_init_dev_dbg(p_tp_dev, p_test_param);
 	if (ret == 0) {
 		goto PARSE_END;
 	}

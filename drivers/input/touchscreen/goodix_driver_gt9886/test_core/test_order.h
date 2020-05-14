@@ -74,7 +74,7 @@ extern int parse_test_order(PST_TEST_PARAM *pp_test_param,
 extern s32 release_test_order(PST_TEST_PARAM *pp_test_param);
 
 /*parse dev info*/
-extern s32 parse_init_dev_info(PST_TP_DEV p_tp_dev,
+extern s32 parse_init_dev_dbg(PST_TP_DEV p_tp_dev,
 				PST_TEST_PARAM p_test_param);
 
 /*init dev*/

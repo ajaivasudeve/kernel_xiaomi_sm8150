@@ -35,14 +35,14 @@ extern "C" {
 
 #define CONFIG_GOODIX_DEBUG
 #ifdef CONFIG_GOODIX_DEBUG
-#define board_print_debug(fmt, arg...)		pr_info("[GTP-DBG][%s:%d]"fmt"\n", __func__, __LINE__, ##arg)
+#define board_print_debug(fmt, arg...)		pr_debug("[GTP-DBG][%s:%d]"fmt"\n", __func__, __LINE__, ##arg)
 #else
 #define board_print_debug(fmt, arg...)		do {} while (0)
 #endif
 #define board_print_error(fmt, arg...)		pr_err("[GTP-ERR][%s:%d]"fmt"\n", __func__, __LINE__, ##arg)
-#define board_print_warning(fmt, arg...)	pr_info("[GTP-WARN][%s:%d]"fmt"\n", __func__, __LINE__, ##arg)
-#define board_print_info(fmt, arg...)		pr_info("[GTP-INF][%s:%d]"fmt"\n", __func__, __LINE__, ##arg)
-#define printf(fmt, arg...)					pr_info("[GTP-INF][%s:%d]"fmt"\n", __func__, __LINE__, ##arg)
+#define board_print_warning(fmt, arg...)	pr_debug("[GTP-WARN][%s:%d]"fmt"\n", __func__, __LINE__, ##arg)
+#define board_print_info(fmt, arg...)		pr_debug("[GTP-INF][%s:%d]"fmt"\n", __func__, __LINE__, ##arg)
+#define printf(fmt, arg...)					pr_debug("[GTP-INF][%s:%d]"fmt"\n", __func__, __LINE__, ##arg)
 
 #define usleep(ms) msleep(ms/1000)
 #define EOF -1
