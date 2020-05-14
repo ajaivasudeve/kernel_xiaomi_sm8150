@@ -29,58 +29,57 @@
 #include <linux/input/mt.h>
 #include <linux/input.h>
 
-#define TS_DT_COMPATIBLE				"goodix,gt9889"
-#define TS_DRIVER_NAME					"goodix_i2c"
-#define I2C_MAX_TRANSFER_SIZE			256
-#define TS_ADDR_LENGTH					2
-#define TS_DOZE_ENABLE_RETRY_TIMES		10
-#define TS_DOZE_DISABLE_RETRY_TIMES		10
-#define TS_WAIT_CFG_READY_RETRY_TIMES	30
-#define TS_WAIT_CMD_FREE_RETRY_TIMES	10
+#define TS_DT_COMPATIBLE "goodix,gt9889"
+#define TS_DRIVER_NAME "goodix_i2c"
+#define I2C_MAX_TRANSFER_SIZE 256
+#define TS_ADDR_LENGTH 2
+#define TS_DOZE_ENABLE_RETRY_TIMES 10
+#define TS_DOZE_DISABLE_RETRY_TIMES 10
+#define TS_WAIT_CFG_READY_RETRY_TIMES 30
+#define TS_WAIT_CMD_FREE_RETRY_TIMES 10
 
-#define TS_REG_COORDS_BASE				0x824E
-#define TS_REG_CMD						0x8040
-#define TS_REG_REQUEST					0x8044
-#define TS_REG_VERSION					0x8240
-#define TS_REG_CFG_BASE					0x8050
-#define TS_REG_DOZE_CTRL				0x30F0
-#define TS_REG_DOZE_STAT				0x3100
-#define TS_REG_ESD_TICK_R				0x3103
+#define TS_REG_COORDS_BASE 0x824E
+#define TS_REG_CMD 0x8040
+#define TS_REG_REQUEST 0x8044
+#define TS_REG_VERSION 0x8240
+#define TS_REG_CFG_BASE 0x8050
+#define TS_REG_DOZE_CTRL 0x30F0
+#define TS_REG_DOZE_STAT 0x3100
+#define TS_REG_ESD_TICK_R 0x3103
 
-#define CFG_XMAX_OFFSET					(0x8052 - 0x8050)
-#define CFG_YMAX_OFFSET					(0x8054 - 0x8050)
+#define CFG_XMAX_OFFSET (0x8052 - 0x8050)
+#define CFG_YMAX_OFFSET (0x8054 - 0x8050)
 
-#define REQUEST_HANDLED					0x00
-#define REQUEST_CONFIG					0x01
-#define REQUEST_BAKREF					0x02
-#define REQUEST_RESET					0x03
-#define REQUEST_MAINCLK					0x04
-#define REQUEST_IDLE					0x05
+#define REQUEST_HANDLED 0x00
+#define REQUEST_CONFIG 0x01
+#define REQUEST_BAKREF 0x02
+#define REQUEST_RESET 0x03
+#define REQUEST_MAINCLK 0x04
+#define REQUEST_IDLE 0x05
 
-#define COMMAND_SLEEP					0x05
-#define COMMAND_CLOSE_HID				0xaa
-#define COMMAND_START_SEND_CFG			0x80
-#define COMMAND_END_SEND_CFG			0x83
-#define COMMAND_SEND_SMALL_CFG			0x81
-#define COMMAND_SEND_CFG_PREPARE_OK		0x82
-#define COMMAND_START_READ_CFG			0x86
-#define COMMAND_READ_CFG_PREPARE_OK		0x85
+#define COMMAND_SLEEP 0x05
+#define COMMAND_CLOSE_HID 0xaa
+#define COMMAND_START_SEND_CFG 0x80
+#define COMMAND_END_SEND_CFG 0x83
+#define COMMAND_SEND_SMALL_CFG 0x81
+#define COMMAND_SEND_CFG_PREPARE_OK 0x82
+#define COMMAND_START_READ_CFG 0x86
+#define COMMAND_READ_CFG_PREPARE_OK 0x85
 
-#define BYTES_PER_COORD					8
-#define TS_MAX_SENSORID					5
-#define TS_CFG_MAX_LEN					1024
-#define TS_CFG_HEAD_LEN					4
-#define TS_CFG_BAG_NUM_INDEX			2
-#define TS_CFG_BAG_START_INDEX			4
+#define BYTES_PER_COORD 8
+#define TS_MAX_SENSORID 5
+#define TS_CFG_MAX_LEN 1024
+#define TS_CFG_HEAD_LEN 4
+#define TS_CFG_BAG_NUM_INDEX 2
+#define TS_CFG_BAG_START_INDEX 4
 #if TS_CFG_MAX_LEN > GOODIX_CFG_MAX_SIZE
 #error GOODIX_CFG_MAX_SIZE too small, please fix.
 #endif
 
-
-#define TS_DOZE_DISABLE_DATA			0xAA
-#define TS_DOZE_CLOSE_OK_DATA			0xBB
-#define TS_DOZE_ENABLE_DATA				0xCC
-#define	TS_CMD_REG_READY				0xFF
+#define TS_DOZE_DISABLE_DATA 0xAA
+#define TS_DOZE_CLOSE_OK_DATA 0xBB
+#define TS_DOZE_ENABLE_DATA 0xCC
+#define TS_CMD_REG_READY 0xFF
 
 #ifdef CONFIG_OF
 int pre_event;
@@ -92,12 +91,12 @@ int pre_event;
  * return: 0 - no error, <0 error
 */
 static int goodix_parse_dt_resolution(struct device_node *node,
-		struct goodix_ts_board_data *board_data)
+				      struct goodix_ts_board_data *board_data)
 {
 	int r, err;
 
 	r = of_property_read_u32(node, "goodix,panel-max-id",
-				&board_data->panel_max_id);
+				 &board_data->panel_max_id);
 	if (r) {
 		err = -ENOENT;
 	} else {
@@ -111,33 +110,30 @@ static int goodix_parse_dt_resolution(struct device_node *node,
 		err = -ENOENT;
 
 	r = of_property_read_u32(node, "goodix,panel-max-y",
-				&board_data->panel_max_y);
+				 &board_data->panel_max_y);
 	if (r)
 		err = -ENOENT;
 
 	r = of_property_read_u32(node, "goodix,panel-max-w",
-				&board_data->panel_max_w);
+				 &board_data->panel_max_w);
 	if (r)
 		err = -ENOENT;
 
 	r = of_property_read_u32(node, "goodix,panel-max-p",
-				&board_data->panel_max_p);
+				 &board_data->panel_max_p);
 	if (r)
 		err = -ENOENT;
 
 	r = of_property_read_u32(node, "goodix,panel-max-fod",
-				&board_data->panel_max_overlapping_area);
+				 &board_data->panel_max_overlapping_area);
 	if (r)
 		err = -ENOENT;
 
-	board_data->swap_axis = of_property_read_bool(node,
-			"goodix,swap-axis");
+	board_data->swap_axis = of_property_read_bool(node, "goodix,swap-axis");
 
-	board_data->x2x = of_property_read_bool(node,
-			"goodix,x2x");
+	board_data->x2x = of_property_read_bool(node, "goodix,x2x");
 
-	board_data->y2y = of_property_read_bool(node,
-			"goodix,y2y");
+	board_data->y2y = of_property_read_bool(node, "goodix,y2y");
 
 	return 0;
 }
@@ -149,12 +145,12 @@ static int goodix_parse_dt_resolution(struct device_node *node,
  * return: 0 - no error, <0 error
 */
 static int goodix_parse_dt(struct device_node *node,
-	struct goodix_ts_board_data *board_data)
+			   struct goodix_ts_board_data *board_data)
 {
 	struct property *prop;
 	int r;
 
-	ts_err("enter::%s\n",__func__);
+	ts_err("enter::%s\n", __func__);
 	if (!board_data) {
 		ts_err("Invalid board data");
 		return -EINVAL;
@@ -197,7 +193,7 @@ static int goodix_parse_dt(struct device_node *node,
 	}
 
 	r = of_property_read_u32(node, "goodix,irq-flags",
-			&board_data->irq_flags);
+				 &board_data->irq_flags);
 	if (r) {
 		ts_err("Invalid irq-flags");
 		return -EINVAL;
@@ -205,22 +201,21 @@ static int goodix_parse_dt(struct device_node *node,
 
 	board_data->avdd_name = "vtouch";
 	board_data->vddio_name = "iotouch";
-	r = of_property_read_u32(node, "vtouch-load",
-				&board_data->avdd_load);
+	r = of_property_read_u32(node, "vtouch-load", &board_data->avdd_load);
 	if (r) {
 		ts_err("can't get vtouch-load");
 		board_data->avdd_load = 0;
 	}
 
 	r = of_property_read_string(node, "goodix,cfg-name",
-				&board_data->cfg_bin_name);
+				    &board_data->cfg_bin_name);
 	if (r) {
 		ts_err("can't get cfg name");
 		board_data->cfg_bin_name = NULL;
 	}
 
 	r = of_property_read_u32(node, "goodix,power-on-delay-us",
-				&board_data->power_on_delay_us);
+				 &board_data->power_on_delay_us);
 	if (!r) {
 		/* 1000ms is too large, maybe you have pass
 		 * a wrong value */
@@ -231,7 +226,7 @@ static int goodix_parse_dt(struct device_node *node,
 	}
 
 	r = of_property_read_u32(node, "goodix,power-off-delay-us",
-				&board_data->power_off_delay_us);
+				 &board_data->power_off_delay_us);
 	if (!r) {
 		/* 1000ms is too large, maybe you have pass
 		 * a wrong value */
@@ -248,7 +243,6 @@ static int goodix_parse_dt(struct device_node *node,
 		return r;
 	}
 
-
 	/* key map */
 	prop = of_find_property(node, "goodix,panel-key-map", NULL);
 	if (prop && prop->length) {
@@ -259,16 +253,16 @@ static int goodix_parse_dt(struct device_node *node,
 
 		board_data->panel_max_key = prop->length / sizeof(u32);
 		board_data->tp_key_num = prop->length / sizeof(u32);
-		r = of_property_read_u32_array(node,
-				"goodix,panel-key-map",
-				&board_data->panel_key_map[0],
-				board_data->panel_max_key);
+		r = of_property_read_u32_array(node, "goodix,panel-key-map",
+					       &board_data->panel_key_map[0],
+					       board_data->panel_max_key);
 		if (r)
 			return r;
 	}
 
 	/*get pen-enable switch and pen keys, must after "key map"*/
-	board_data->pen_enable = of_property_read_bool(node, "goodix,pen-enable");
+	board_data->pen_enable =
+		of_property_read_bool(node, "goodix,pen-enable");
 	if (board_data->pen_enable) {
 		prop = of_find_property(node, "goodix,key-of-pen", NULL);
 		if (prop && prop->length) {
@@ -276,29 +270,25 @@ static int goodix_parse_dt(struct device_node *node,
 				ts_err("Size of key-of-pen is invalid");
 				return r;
 			}
-			r = of_property_read_u32_array(node,
-				"goodix,key-of-pen",
-				&board_data->panel_key_map[board_data->panel_max_key],
+			r = of_property_read_u32_array(
+				node, "goodix,key-of-pen",
+				&board_data->panel_key_map
+					 [board_data->panel_max_key],
 				prop->length / sizeof(u32));
 			if (r)
 				return r;
-			board_data->panel_max_key += (prop->length / sizeof(u32));
+			board_data->panel_max_key +=
+				(prop->length / sizeof(u32));
 		}
 	}
-	ts_debug("***key:%d, %d, %d, %d, %d",
-			board_data->panel_key_map[0],
-			board_data->panel_key_map[1],
-			board_data->panel_key_map[2],
-			board_data->panel_key_map[3],
-			board_data->panel_key_map[4]);
+	ts_debug("***key:%d, %d, %d, %d, %d", board_data->panel_key_map[0],
+		 board_data->panel_key_map[1], board_data->panel_key_map[2],
+		 board_data->panel_key_map[3], board_data->panel_key_map[4]);
 	/*add end*/
 
-	ts_debug("[DT]id:%d, x:%d, y:%d, w:%d, p:%d",
-			board_data->panel_max_id,
-			board_data->panel_max_x,
-			board_data->panel_max_y,
-			board_data->panel_max_w,
-			board_data->panel_max_p);
+	ts_debug("[DT]id:%d, x:%d, y:%d, w:%d, p:%d", board_data->panel_max_id,
+		 board_data->panel_max_x, board_data->panel_max_y,
+		 board_data->panel_max_w, board_data->panel_max_p);
 	return 0;
 }
 
@@ -309,9 +299,10 @@ static int goodix_parse_dt(struct device_node *node,
  * @sensor_id: sensor ID
  * return: 0 - read ok, < 0 - i2c transter error
 */
-static int goodix_parse_customize_params(struct goodix_ts_device *dev,
-				struct goodix_ts_board_data *board_data,
-				unsigned int sensor_id)
+static int
+goodix_parse_customize_params(struct goodix_ts_device *dev,
+			      struct goodix_ts_board_data *board_data,
+			      unsigned int sensor_id)
 {
 	struct device_node *node = dev->dev->of_node;
 	char of_node_name[24];
@@ -323,8 +314,7 @@ static int goodix_parse_customize_params(struct goodix_ts_device *dev,
 	}
 
 	/* parse sensor independent parameters */
-	snprintf(of_node_name, sizeof(of_node_name),
-			"sensor%u", sensor_id);
+	snprintf(of_node_name, sizeof(of_node_name), "sensor%u", sensor_id);
 	node = of_find_node_by_name(dev->dev->of_node, of_node_name);
 	if (!node) {
 		ts_err("Child property[%s] not found", of_node_name);
@@ -332,14 +322,14 @@ static int goodix_parse_customize_params(struct goodix_ts_device *dev,
 	}
 
 	r = of_property_read_string(node, "goodix,fw-name",
-				&board_data->fw_name);
+				    &board_data->fw_name);
 	if (r) {
 		ts_err("can't get firmware name");
 		board_data->fw_name = NULL;
 	}
 
 	r = of_property_read_string(node, "goodix,limit-name",
-				&board_data->limit_name);
+				    &board_data->limit_name);
 	if (r) {
 		ts_err("can't get limit name");
 		board_data->limit_name = NULL;
@@ -353,19 +343,18 @@ static int goodix_parse_customize_params(struct goodix_ts_device *dev,
 
 #ifdef CONFIG_ACPI
 static int goodix_parse_acpi(struct acpi_device *dev,
-		struct goodix_ts_board_data *bdata)
+			     struct goodix_ts_board_data *bdata)
 {
 	return 0;
 }
 
-static int goodix_parse_acpi_cfg(struct acpi_device *dev,
-		char *cfg_type, struct goodix_ts_config *config,
-		unsigned int sensor_id)
+static int goodix_parse_acpi_cfg(struct acpi_device *dev, char *cfg_type,
+				 struct goodix_ts_config *config,
+				 unsigned int sensor_id)
 {
 	return 0;
 }
 #endif
-
 
 /**
  * goodix_i2c_read_trans - read device register through i2c bus
@@ -376,31 +365,32 @@ static int goodix_parse_acpi_cfg(struct acpi_device *dev,
  * return: 0 - read ok, < 0 - i2c transter error
 */
 int goodix_i2c_read_trans(struct goodix_ts_device *dev, unsigned int reg,
-	unsigned char *data, unsigned int len)
+			  unsigned char *data, unsigned int len)
 {
 	struct i2c_client *client = to_i2c_client(dev->dev);
 	unsigned int transfer_length = 0;
 	unsigned int pos = 0, address = reg;
 	unsigned char get_buf[32], addr_buf[2];
 	int retry, r = 0;
-	struct i2c_msg msgs[] = {
-		{
-			.addr = client->addr,
-			.flags = !I2C_M_RD,
-			.buf = &addr_buf[0],
-			.len = TS_ADDR_LENGTH,
-		}, {
-			.addr = client->addr,
-			.flags = I2C_M_RD,
-		}
-	};
+	struct i2c_msg msgs[] = { {
+					  .addr = client->addr,
+					  .flags = !I2C_M_RD,
+					  .buf = &addr_buf[0],
+					  .len = TS_ADDR_LENGTH,
+				  },
+				  {
+					  .addr = client->addr,
+					  .flags = I2C_M_RD,
+				  } };
 
 	if (likely(len < sizeof(get_buf))) {
 		/* code optimize, use stack memory */
 		msgs[1].buf = &get_buf[0];
 	} else {
-		msgs[1].buf = kzalloc(I2C_MAX_TRANSFER_SIZE < len
-						? I2C_MAX_TRANSFER_SIZE : len, GFP_KERNEL);
+		msgs[1].buf = kzalloc(I2C_MAX_TRANSFER_SIZE < len ?
+					      I2C_MAX_TRANSFER_SIZE :
+					      len,
+				      GFP_KERNEL);
 		if (msgs[1].buf == NULL) {
 			ts_err("Malloc failed");
 			return -ENOMEM;
@@ -418,8 +408,10 @@ int goodix_i2c_read_trans(struct goodix_ts_device *dev, unsigned int reg,
 		msgs[1].len = transfer_length;
 
 		for (retry = 0; retry < GOODIX_BUS_RETRY_TIMES; retry++) {
-			if (likely(i2c_transfer(client->adapter, msgs, 2) == 2)) {
-				memcpy(&data[pos], msgs[1].buf, transfer_length);
+			if (likely(i2c_transfer(client->adapter, msgs, 2) ==
+				   2)) {
+				memcpy(&data[pos], msgs[1].buf,
+				       transfer_length);
 				pos += transfer_length;
 				address += transfer_length;
 				break;
@@ -429,7 +421,7 @@ int goodix_i2c_read_trans(struct goodix_ts_device *dev, unsigned int reg,
 		}
 		if (unlikely(retry == GOODIX_BUS_RETRY_TIMES)) {
 			ts_err("I2c read failed,dev:%02x,reg:%04x,size:%u",
-					client->addr, reg, len);
+			       client->addr, reg, len);
 			r = -EBUS;
 			goto read_exit;
 		}
@@ -450,7 +442,7 @@ read_exit:
  * return: 0 - write ok; < 0 - i2c transter error.
 */
 int goodix_i2c_write_trans(struct goodix_ts_device *dev, unsigned int reg,
-		unsigned char *data, unsigned int len)
+			   unsigned char *data, unsigned int len)
 {
 	struct i2c_client *client = to_i2c_client(dev->dev);
 	unsigned int pos = 0, transfer_length = 0;
@@ -458,17 +450,18 @@ int goodix_i2c_write_trans(struct goodix_ts_device *dev, unsigned int reg,
 	unsigned char put_buf[64];
 	int retry, r = 0;
 	struct i2c_msg msg = {
-			.addr = client->addr,
-			.flags = !I2C_M_RD,
+		.addr = client->addr,
+		.flags = !I2C_M_RD,
 	};
 
 	if (likely(len + TS_ADDR_LENGTH < sizeof(put_buf))) {
 		/* code optimize,use stack memory*/
 		msg.buf = &put_buf[0];
 	} else {
-		msg.buf = kmalloc(I2C_MAX_TRANSFER_SIZE < len + TS_ADDR_LENGTH
-					? I2C_MAX_TRANSFER_SIZE : len + TS_ADDR_LENGTH,
-					GFP_KERNEL);
+		msg.buf = kmalloc(I2C_MAX_TRANSFER_SIZE < len + TS_ADDR_LENGTH ?
+					  I2C_MAX_TRANSFER_SIZE :
+					  len + TS_ADDR_LENGTH,
+				  GFP_KERNEL);
 		if (msg.buf == NULL) {
 			ts_err("Malloc failed");
 			return -ENOMEM;
@@ -476,8 +469,10 @@ int goodix_i2c_write_trans(struct goodix_ts_device *dev, unsigned int reg,
 	}
 
 	while (pos != len) {
-		if (unlikely(len - pos > I2C_MAX_TRANSFER_SIZE - TS_ADDR_LENGTH))
-			transfer_length = I2C_MAX_TRANSFER_SIZE - TS_ADDR_LENGTH;
+		if (unlikely(len - pos >
+			     I2C_MAX_TRANSFER_SIZE - TS_ADDR_LENGTH))
+			transfer_length =
+				I2C_MAX_TRANSFER_SIZE - TS_ADDR_LENGTH;
 		else
 			transfer_length = len - pos;
 
@@ -487,7 +482,8 @@ int goodix_i2c_write_trans(struct goodix_ts_device *dev, unsigned int reg,
 		memcpy(&msg.buf[2], &data[pos], transfer_length);
 
 		for (retry = 0; retry < GOODIX_BUS_RETRY_TIMES; retry++) {
-			if (likely(i2c_transfer(client->adapter, &msg, 1) == 1)) {
+			if (likely(i2c_transfer(client->adapter, &msg, 1) ==
+				   1)) {
 				pos += transfer_length;
 				address += transfer_length;
 				break;
@@ -497,7 +493,7 @@ int goodix_i2c_write_trans(struct goodix_ts_device *dev, unsigned int reg,
 		}
 		if (unlikely(retry == GOODIX_BUS_RETRY_TIMES)) {
 			ts_err("I2c write failed,dev:%02x,reg:%04x,size:%u",
-					client->addr, reg, len);
+			       client->addr, reg, len);
 			r = -EBUS;
 			goto write_exit;
 		}
@@ -508,7 +504,6 @@ write_exit:
 		kfree(msg.buf);
 	return r;
 }
-
 
 /**
  * goodix_set_i2c_doze_mode - disable or enable doze mode
@@ -536,7 +531,8 @@ int goodix_set_i2c_doze_mode(struct goodix_ts_device *dev, int enable)
 		if (dev->doze_mode_set_count == 0) {
 			w_data = TS_DOZE_ENABLE_DATA;
 			for (i = 0; i < TS_DOZE_ENABLE_RETRY_TIMES; i++) {
-				result = goodix_i2c_write_trans(dev, TS_REG_DOZE_CTRL, &w_data, 1);
+				result = goodix_i2c_write_trans(
+					dev, TS_REG_DOZE_CTRL, &w_data, 1);
 				if (!result) {
 					result = 0;
 					goto exit;
@@ -554,16 +550,20 @@ int goodix_set_i2c_doze_mode(struct goodix_ts_device *dev, int enable)
 		dev->doze_mode_set_count++;
 		if (dev->doze_mode_set_count == 1) {
 			w_data = TS_DOZE_DISABLE_DATA;
-			goodix_i2c_write_trans(dev, TS_REG_DOZE_CTRL, &w_data, 1);
+			goodix_i2c_write_trans(dev, TS_REG_DOZE_CTRL, &w_data,
+					       1);
 			usleep_range(1000, 1100);
 			for (i = 0; i < TS_DOZE_DISABLE_RETRY_TIMES; i++) {
-				goodix_i2c_read_trans(dev, TS_REG_DOZE_STAT, &r_data, 1);
+				goodix_i2c_read_trans(dev, TS_REG_DOZE_STAT,
+						      &r_data, 1);
 				if (TS_DOZE_CLOSE_OK_DATA == r_data) {
 					result = 0;
 					goto exit;
 				} else if (0xAA != r_data) {
 					w_data = TS_DOZE_DISABLE_DATA;
-					goodix_i2c_write_trans(dev, TS_REG_DOZE_CTRL, &w_data, 1);
+					goodix_i2c_write_trans(dev,
+							       TS_REG_DOZE_CTRL,
+							       &w_data, 1);
 				}
 				usleep_range(10000, 10100);
 			}
@@ -588,14 +588,14 @@ exit:
  * return: 0 - write ok; < 0 - i2c transter error.
 */
 int goodix_i2c_write(struct goodix_ts_device *dev, unsigned int reg,
-		unsigned char *data, unsigned int len)
+		     unsigned char *data, unsigned int len)
 {
 	int r;
 
 	if (dev->ic_type == IC_TYPE_NORMANDY) {
 		if (goodix_set_i2c_doze_mode(dev, false) != 0)
 			ts_err("gtx8 i2c write:0x%04x ERROR, disable doze mode FAILED",
-					reg);
+			       reg);
 	}
 
 	r = goodix_i2c_write_trans(dev, reg, data, len);
@@ -603,11 +603,10 @@ int goodix_i2c_write(struct goodix_ts_device *dev, unsigned int reg,
 	if (dev->ic_type == IC_TYPE_NORMANDY) {
 		if (goodix_set_i2c_doze_mode(dev, true) != 0)
 			ts_err("gtx8 i2c write:0x%04x ERROR, enable doze mode FAILED",
-					reg);
+			       reg);
 	}
 	return r;
 }
-
 
 /**
  * goodix_i2c_read - read device register through i2c bus
@@ -618,20 +617,20 @@ int goodix_i2c_write(struct goodix_ts_device *dev, unsigned int reg,
  * return: 0 - read ok, < 0 - i2c transter error
 */
 int goodix_i2c_read(struct goodix_ts_device *dev, unsigned int reg,
-	unsigned char *data, unsigned int len)
+		    unsigned char *data, unsigned int len)
 {
 	int r;
 
 	if (dev->ic_type == IC_TYPE_NORMANDY) {
 		if (goodix_set_i2c_doze_mode(dev, false) != 0)
 			ts_err("gtx8 i2c read:0x%04x ERROR, disable doze mode FAILED",
-					reg);
+			       reg);
 	}
 	r = goodix_i2c_read_trans(dev, reg, data, len);
 	if (dev->ic_type == IC_TYPE_NORMANDY) {
 		if (goodix_set_i2c_doze_mode(dev, true) != 0)
 			ts_err("gtx8 i2c read:0x%04x ERROR, enable doze mode FAILED",
-					reg);
+			       reg);
 	}
 	return r;
 }
@@ -646,24 +645,25 @@ int goodix_i2c_read(struct goodix_ts_device *dev, unsigned int reg,
  * return: 0 - write ok; < 0 - i2c transter error.
 */
 int goodix_i2c_write_trans_once(struct goodix_ts_device *dev, unsigned int reg,
-		unsigned char *data, unsigned int len)
+				unsigned char *data, unsigned int len)
 {
 	struct i2c_client *client = to_i2c_client(dev->dev);
 	unsigned int pos = 0, transfer_length = 0;
 	unsigned int address = reg;
 	unsigned char put_buf[64];
 	struct i2c_msg msg = {
-			.addr = client->addr,
-			.flags = !I2C_M_RD,
+		.addr = client->addr,
+		.flags = !I2C_M_RD,
 	};
 
 	if (likely(len + TS_ADDR_LENGTH < sizeof(put_buf))) {
 		/* code optimize,use stack memory*/
 		msg.buf = &put_buf[0];
 	} else {
-		msg.buf = kmalloc(I2C_MAX_TRANSFER_SIZE < len + TS_ADDR_LENGTH
-					? I2C_MAX_TRANSFER_SIZE : len + TS_ADDR_LENGTH,
-					GFP_KERNEL);
+		msg.buf = kmalloc(I2C_MAX_TRANSFER_SIZE < len + TS_ADDR_LENGTH ?
+					  I2C_MAX_TRANSFER_SIZE :
+					  len + TS_ADDR_LENGTH,
+				  GFP_KERNEL);
 		if (msg.buf == NULL) {
 			ts_err("Malloc failed");
 			return -ENOMEM;
@@ -671,8 +671,10 @@ int goodix_i2c_write_trans_once(struct goodix_ts_device *dev, unsigned int reg,
 	}
 
 	while (pos != len) {
-		if (unlikely(len - pos > I2C_MAX_TRANSFER_SIZE - TS_ADDR_LENGTH))
-			transfer_length = I2C_MAX_TRANSFER_SIZE - TS_ADDR_LENGTH;
+		if (unlikely(len - pos >
+			     I2C_MAX_TRANSFER_SIZE - TS_ADDR_LENGTH))
+			transfer_length =
+				I2C_MAX_TRANSFER_SIZE - TS_ADDR_LENGTH;
 		else
 			transfer_length = len - pos;
 
@@ -691,10 +693,8 @@ int goodix_i2c_write_trans_once(struct goodix_ts_device *dev, unsigned int reg,
 	return 0;
 }
 
-
-
-static void goodix_cmds_init(struct goodix_ts_cmd *ts_cmd,
-					     u8 cmds, u8 cmd_data, u32 reg_addr)
+static void goodix_cmds_init(struct goodix_ts_cmd *ts_cmd, u8 cmds, u8 cmd_data,
+			     u32 reg_addr)
 {
 	if (reg_addr) {
 		ts_cmd->cmd_reg = reg_addr;
@@ -703,11 +703,10 @@ static void goodix_cmds_init(struct goodix_ts_cmd *ts_cmd,
 		ts_cmd->cmds[1] = cmd_data;
 		ts_cmd->cmds[2] = 0 - cmds - cmd_data;
 		ts_cmd->initialized = true;
-		} else {
-			ts_cmd->initialized = false;
+	} else {
+		ts_cmd->initialized = false;
 	}
 }
-
 
 /**
  * goodix_send_command - seng cmd to firmware
@@ -716,23 +715,20 @@ static void goodix_cmds_init(struct goodix_ts_cmd *ts_cmd,
  * @cmd: pointer to command struct which cotain command data
  * Returns 0 - succeed,<0 - failed
  */
-int goodix_send_command(struct goodix_ts_device *dev,
-		struct goodix_ts_cmd *cmd)
+int goodix_send_command(struct goodix_ts_device *dev, struct goodix_ts_cmd *cmd)
 {
 	int ret;
 
 	if (!cmd || !cmd->initialized)
 		return -EINVAL;
 
-	ret = goodix_i2c_write(dev, cmd->cmd_reg, cmd->cmds,
-			cmd->length);
+	ret = goodix_i2c_write(dev, cmd->cmd_reg, cmd->cmds, cmd->length);
 
 	return ret;
 }
 
-
 static int goodix_read_version(struct goodix_ts_device *dev,
-		struct goodix_ts_version *version)
+			       struct goodix_ts_version *version)
 {
 	u8 buffer[12];
 	u8 temp_buf[256], checksum;
@@ -740,9 +736,9 @@ static int goodix_read_version(struct goodix_ts_device *dev,
 	u8 pid_read_len = dev->reg.pid_len;
 	u8 vid_read_len = dev->reg.vid_len;
 	u8 sensor_id_mask = dev->reg.sensor_id_mask;
-#define IS_CHAR(c)	(((c) >= 'A' && (c) <= 'Z')\
-		|| ((c) >= 'a' && (c) <= 'z')\
-		|| ((c) >= '0' && (c) <= '9'))
+#define IS_CHAR(c)                                                             \
+	(((c) >= 'A' && (c) <= 'Z') || ((c) >= 'a' && (c) <= 'z') ||           \
+	 ((c) >= '0' && (c) <= '9'))
 
 	if (!version) {
 		ts_err("pointer of version is NULL");
@@ -753,12 +749,13 @@ static int goodix_read_version(struct goodix_ts_device *dev,
 	/*check reg info valid*/
 	if (!dev->reg.pid || !dev->reg.sensor_id || !dev->reg.vid) {
 		ts_err("reg is NULL, pid:0x%04x, vid:0x%04x, sensor_id:0x%04x",
-				dev->reg.pid, dev->reg.vid, dev->reg.sensor_id);
+		       dev->reg.pid, dev->reg.vid, dev->reg.sensor_id);
 		return -EINVAL;
 	}
-	if (!pid_read_len || pid_read_len > GOODIX_PID_MAX_LEN || !vid_read_len || vid_read_len > GOODIX_VID_MAX_LEN) {
+	if (!pid_read_len || pid_read_len > GOODIX_PID_MAX_LEN ||
+	    !vid_read_len || vid_read_len > GOODIX_VID_MAX_LEN) {
 		ts_err("pid vid read len ERROR, pid_read_len:%d, vid_read_len:%d",
-				pid_read_len, vid_read_len);
+		       pid_read_len, vid_read_len);
 		return -EINVAL;
 	}
 
@@ -768,12 +765,12 @@ static int goodix_read_version(struct goodix_ts_device *dev,
 
 	/*check checksum*/
 	if (dev->reg.version_base && dev->reg.version_len < 256) {
-		r = goodix_i2c_read(dev, dev->reg.version_base,
-				temp_buf, dev->reg.version_len);
+		r = goodix_i2c_read(dev, dev->reg.version_base, temp_buf,
+				    dev->reg.version_len);
 
 		if (r < 0) {
 			ts_err("Read version base failed, reg:0x%02x, len:%d",
-					dev->reg.version_base, dev->reg.version_len);
+			       dev->reg.version_base, dev->reg.version_len);
 			if (version)
 				version->valid = false;
 			goto exit;
@@ -782,10 +779,14 @@ static int goodix_read_version(struct goodix_ts_device *dev,
 		checksum = checksum_u8(temp_buf, dev->reg.version_len);
 		if (checksum) {
 			ts_err("checksum error:0x%02x, base:0x%02x, len:%d",
-					checksum, dev->reg.version_base, dev->reg.version_len);
-			ts_err("%*ph", (int)(dev->reg.version_len / 2), temp_buf);
-			ts_err("%*ph", (int)(dev->reg.version_len - dev->reg.version_len / 2),
-					&temp_buf[dev->reg.version_len / 2]);
+			       checksum, dev->reg.version_base,
+			       dev->reg.version_len);
+			ts_err("%*ph", (int)(dev->reg.version_len / 2),
+			       temp_buf);
+			ts_err("%*ph",
+			       (int)(dev->reg.version_len -
+				     dev->reg.version_len / 2),
+			       &temp_buf[dev->reg.version_len / 2]);
 
 			if (version)
 				version->valid = false;
@@ -806,7 +807,6 @@ static int goodix_read_version(struct goodix_ts_device *dev,
 	}
 	memcpy(version->pid, buffer, pid_read_len);
 
-
 	/*read vid*/
 	memset(buffer, 0, sizeof(buffer));
 	memset(version->vid, 0, sizeof(version->vid));
@@ -818,12 +818,9 @@ static int goodix_read_version(struct goodix_ts_device *dev,
 		goto exit;
 	}
 	memcpy(version->vid, buffer, vid_read_len);
-	ts_debug("PID:%s, VID:0x%02x 0x%02x 0x%02x 0x%02x",
-						version->pid,
-						version->vid[0],
-						version->vid[1],
-						version->vid[2],
-						version->vid[3]);
+	ts_debug("PID:%s, VID:0x%02x 0x%02x 0x%02x 0x%02x", version->pid,
+		 version->vid[0], version->vid[1], version->vid[2],
+		 version->vid[3]);
 	/*read sensor_id*/
 	memset(buffer, 0, sizeof(buffer));
 	r = goodix_i2c_read(dev, dev->reg.sensor_id, buffer, 1);
@@ -836,7 +833,7 @@ static int goodix_read_version(struct goodix_ts_device *dev,
 	if (sensor_id_mask != 0) {
 		version->sensor_id = buffer[0] & sensor_id_mask;
 		ts_debug("sensor_id_mask:0x%02x, sensor_id:0x%02x",
-				sensor_id_mask, version->sensor_id);
+			 sensor_id_mask, version->sensor_id);
 	} else {
 		version->sensor_id = buffer[0];
 	}
@@ -845,10 +842,8 @@ static int goodix_read_version(struct goodix_ts_device *dev,
 
 	r = goodix_i2c_read(dev, dev->reg.vid, buffer, vid_read_len);
 	memcpy(version->vid, buffer, vid_read_len);
-	ts_debug("PID:%s,SensorID:%d, VID:%*ph",
-						version->pid,
-						version->sensor_id,
-						(int)sizeof(version->vid), version->vid);
+	ts_debug("PID:%s,SensorID:%d, VID:%*ph", version->pid,
+		 version->sensor_id, (int)sizeof(version->vid), version->vid);
 
 exit:
 	/*enable doze mode, just valid for normandy
@@ -858,19 +853,19 @@ exit:
 	return r;
 }
 
-
-static int goodix_wait_cfg_cmd_ready(struct goodix_ts_device *dev,
-			u8 right_cmd, u8 send_cmd)
+static int goodix_wait_cfg_cmd_ready(struct goodix_ts_device *dev, u8 right_cmd,
+				     u8 send_cmd)
 {
 	int try_times = 0;
 	u8 cmd_flag = 0;
-	u8 cmd_buf[3] = {0};
+	u8 cmd_buf[3] = { 0 };
 	u16 command_reg = dev->reg.command;
 	struct goodix_ts_cmd ts_cmd;
 
 	goodix_cmds_init(&ts_cmd, send_cmd, 0, command_reg);
 
-	for (try_times = 0; try_times < TS_WAIT_CFG_READY_RETRY_TIMES; try_times++) {
+	for (try_times = 0; try_times < TS_WAIT_CFG_READY_RETRY_TIMES;
+	     try_times++) {
 		if (goodix_i2c_read(dev, command_reg, cmd_buf, 3)) {
 			ts_err("Read cmd_reg error");
 			return -EINVAL;
@@ -880,7 +875,7 @@ static int goodix_wait_cfg_cmd_ready(struct goodix_ts_device *dev,
 			return 0;
 		} else if (cmd_flag != send_cmd) {
 			ts_err("Read cmd_reg data abnormal,return:0x%02X, 0x%02X, 0x%02X, send again",
-						cmd_buf[0], cmd_buf[1], cmd_buf[2]);
+			       cmd_buf[0], cmd_buf[1], cmd_buf[2]);
 			if (goodix_send_command(dev, &ts_cmd)) {
 				ts_err("Resend cmd 0x%02X FAILED", send_cmd);
 				return -EINVAL;
@@ -893,7 +888,7 @@ static int goodix_wait_cfg_cmd_ready(struct goodix_ts_device *dev,
 }
 
 static int goodix_send_small_config(struct goodix_ts_device *dev,
-		struct goodix_ts_config *config)
+				    struct goodix_ts_config *config)
 {
 	int r = 0;
 	int try_times = 0;
@@ -903,13 +898,16 @@ static int goodix_send_small_config(struct goodix_ts_device *dev,
 	struct goodix_ts_cmd ts_cmd;
 
 	/*1. Inquire command_reg until it's free*/
-	for (try_times = 0; try_times < TS_WAIT_CMD_FREE_RETRY_TIMES; try_times++) {
-		if (!goodix_i2c_read(dev, command_reg, &buf, 1) && buf == TS_CMD_REG_READY)
+	for (try_times = 0; try_times < TS_WAIT_CMD_FREE_RETRY_TIMES;
+	     try_times++) {
+		if (!goodix_i2c_read(dev, command_reg, &buf, 1) &&
+		    buf == TS_CMD_REG_READY)
 			break;
 		usleep_range(10000, 11000);
 	}
 	if (try_times >= TS_WAIT_CMD_FREE_RETRY_TIMES) {
-		ts_err("Send small cfg FAILED, before send, reg:0x%04x is not 0xff", command_reg);
+		ts_err("Send small cfg FAILED, before send, reg:0x%04x is not 0xff",
+		       command_reg);
 		r = -EINVAL;
 		goto exit;
 	}
@@ -937,7 +935,7 @@ exit:
 }
 
 static int goodix_send_large_config(struct goodix_ts_device *dev,
-		struct goodix_ts_config *config)
+				    struct goodix_ts_config *config)
 {
 	int r = 0;
 	int try_times = 0;
@@ -947,13 +945,16 @@ static int goodix_send_large_config(struct goodix_ts_device *dev,
 	struct goodix_ts_cmd ts_cmd;
 
 	/*1. Inquire command_reg until it's free*/
-	for (try_times = 0; try_times < TS_WAIT_CMD_FREE_RETRY_TIMES; try_times++) {
-		if (!goodix_i2c_read(dev, command_reg, &buf, 1) && buf == TS_CMD_REG_READY)
+	for (try_times = 0; try_times < TS_WAIT_CMD_FREE_RETRY_TIMES;
+	     try_times++) {
+		if (!goodix_i2c_read(dev, command_reg, &buf, 1) &&
+		    buf == TS_CMD_REG_READY)
 			break;
 		usleep_range(10000, 11000);
 	}
 	if (try_times >= TS_WAIT_CMD_FREE_RETRY_TIMES) {
-		ts_err("Send large cfg FAILED, before send, reg:0x%04x is not 0xff", command_reg);
+		ts_err("Send large cfg FAILED, before send, reg:0x%04x is not 0xff",
+		       command_reg);
 		r = -EINVAL;
 		goto exit;
 	}
@@ -967,8 +968,10 @@ static int goodix_send_large_config(struct goodix_ts_device *dev,
 	}
 
 	/*3. wait ic set command_reg to 0x82*/
-	if (goodix_wait_cfg_cmd_ready(dev, COMMAND_SEND_CFG_PREPARE_OK, COMMAND_START_SEND_CFG)) {
-		ts_err("Send large cfg FAILED, reg:0x%04x is not 0x82", command_reg);
+	if (goodix_wait_cfg_cmd_ready(dev, COMMAND_SEND_CFG_PREPARE_OK,
+				      COMMAND_START_SEND_CFG)) {
+		ts_err("Send large cfg FAILED, reg:0x%04x is not 0x82",
+		       command_reg);
 		r = -EINVAL;
 		goto exit;
 	}
@@ -989,13 +992,16 @@ static int goodix_send_large_config(struct goodix_ts_device *dev,
 	}
 
 	/*6. wait ic set command_reg to 0xff*/
-	for (try_times = 0; try_times < TS_WAIT_CMD_FREE_RETRY_TIMES; try_times++) {
-		if (!goodix_i2c_read(dev, command_reg, &buf, 1) && buf == TS_CMD_REG_READY)
+	for (try_times = 0; try_times < TS_WAIT_CMD_FREE_RETRY_TIMES;
+	     try_times++) {
+		if (!goodix_i2c_read(dev, command_reg, &buf, 1) &&
+		    buf == TS_CMD_REG_READY)
 			break;
 		usleep_range(10000, 11000);
 	}
 	if (try_times >= TS_WAIT_CMD_FREE_RETRY_TIMES) {
-		ts_err("Send large cfg FAILED, after send, reg:0x%04x is not 0xff", command_reg);
+		ts_err("Send large cfg FAILED, after send, reg:0x%04x is not 0xff",
+		       command_reg);
 		r = -EINVAL;
 		goto exit;
 	}
@@ -1007,7 +1013,8 @@ exit:
 	return r;
 }
 
-static int goodix_check_cfg_valid(struct goodix_ts_device *dev, u8 *cfg, u32 length)
+static int goodix_check_cfg_valid(struct goodix_ts_device *dev, u8 *cfg,
+				  u32 length)
 {
 	int ret;
 	u8 bag_num;
@@ -1029,7 +1036,7 @@ static int goodix_check_cfg_valid(struct goodix_ts_device *dev, u8 *cfg, u32 len
 
 		if (checksum != 0) {
 			ts_err("cfg head checksum ERROR, ic type:nanjing, checksum:0x%02x",
-					checksum);
+			       checksum);
 			ret = -EINVAL;
 			goto exit;
 		}
@@ -1041,7 +1048,7 @@ static int goodix_check_cfg_valid(struct goodix_ts_device *dev, u8 *cfg, u32 len
 			checksum += cfg[i];
 		if (checksum != 0) {
 			ts_err("cfg head checksum ERROR, ic type:normandy, checksum:0x%02x",
-					checksum);
+			       checksum);
 			ret = -EINVAL;
 			goto exit;
 		}
@@ -1058,7 +1065,8 @@ static int goodix_check_cfg_valid(struct goodix_ts_device *dev, u8 *cfg, u32 len
 	/*check each bag's checksum*/
 	for (j = 0; j < bag_num; j++) {
 		if (bag_start >= length - 1) {
-			ts_err("ERROR, overflow!!bag_start:%d, cfg_len:%d", bag_start, length);
+			ts_err("ERROR, overflow!!bag_start:%d, cfg_len:%d",
+			       bag_start, length);
 			ret = -EINVAL;
 			goto exit;
 		}
@@ -1071,14 +1079,15 @@ static int goodix_check_cfg_valid(struct goodix_ts_device *dev, u8 *cfg, u32 len
 		checksum = 0;
 		if (bag_end > length) {
 			ts_err("ERROR, overflow!!bag:%d, bag_start:%d,  bag_end:%d, cfg length:%d",
-					j, bag_start, bag_end, length);
+			       j, bag_start, bag_end, length);
 			ret = -EINVAL;
 			goto exit;
 		}
 		for (i = bag_start; i < bag_end; i++)
 			checksum += cfg[i];
 		if (checksum != 0) {
-			ts_err("cfg INVALID, bag:%d checksum ERROR:0x%02x", j, checksum);
+			ts_err("cfg INVALID, bag:%d checksum ERROR:0x%02x", j,
+			       checksum);
 			ret = -EINVAL;
 			goto exit;
 		}
@@ -1093,12 +1102,12 @@ exit:
 }
 
 static int goodix_send_config(struct goodix_ts_device *dev,
-		struct goodix_ts_config *config)
+			      struct goodix_ts_config *config)
 {
 	int r = 0;
 
 	/*check reg valid*/
-/*	if (!dev->reg.cfg_addr) {
+	/*	if (!dev->reg.cfg_addr) {
 		ts_err("cfg register is NULL");
 		return -EINVAL;
 	}*/
@@ -1114,9 +1123,7 @@ static int goodix_send_config(struct goodix_ts_device *dev,
 		return -EINVAL;
 	}
 
-	ts_debug("ver:%02xh,size:%d",
-		config->data[0],
-		config->length);
+	ts_debug("ver:%02xh,size:%d", config->data[0], config->length);
 
 	mutex_lock(&config->lock);
 
@@ -1136,14 +1143,12 @@ static int goodix_send_config(struct goodix_ts_device *dev,
 	}
 
 	if (r != 0)
-		ts_err("send_cfg FAILED, ic_type:%d, cfg_len:%d",
-				dev->ic_type, config->length);
+		ts_err("send_cfg FAILED, ic_type:%d, cfg_len:%d", dev->ic_type,
+		       config->length);
 
 	mutex_unlock(&config->lock);
 	return r;
 }
-
-
 
 #if 0
 /**
@@ -1181,7 +1186,6 @@ exit:
 }
 #endif
 
-
 /**
  * goodix_close_hidi2c_mode
  *   Called by touch core module when bootup
@@ -1205,7 +1209,8 @@ static int goodix_close_hidi2c_mode(struct goodix_ts_device *ts_dev)
 		usleep_range(10000, 11000);
 	}
 	if (try_times >= 10) {
-		ts_debug("goodix_close_hidi2c_mode FAILED, 0x8040 is not equal to 0xff");
+		ts_debug(
+			"goodix_close_hidi2c_mode FAILED, 0x8040 is not equal to 0xff");
 		return -EINVAL;
 	}
 
@@ -1220,12 +1225,15 @@ static int goodix_close_hidi2c_mode(struct goodix_ts_device *ts_dev)
 
 			/*read 0x8040, if it's not 0xFF,continue*/
 			for (j = 0; j < 3; j++) {
-				if (goodix_i2c_read(ts_dev, 0x8040, buffer, 1) != 0)
+				if (goodix_i2c_read(ts_dev, 0x8040, buffer,
+						    1) != 0)
 					continue;
 				else {
 					if (buffer[0] != 0xFF) {
-						ts_debug("try_times:%d:%d, read 0x8040:0x%02x",
-								try_times, j, buffer[0]);
+						ts_debug(
+							"try_times:%d:%d, read 0x8040:0x%02x",
+							try_times, j,
+							buffer[0]);
 						usleep_range(10000, 11000);
 						continue;
 					} else
@@ -1247,9 +1255,8 @@ exit:
 }
 
 /* success return config length else return -1 */
-static int _goodix_do_read_config(struct goodix_ts_device *dev,
-						  u32 base_addr,
-										  u8 *buf)
+static int _goodix_do_read_config(struct goodix_ts_device *dev, u32 base_addr,
+				  u8 *buf)
 {
 	int sub_bags = 0;
 	int offset = 0;
@@ -1276,14 +1283,13 @@ static int _goodix_do_read_config(struct goodix_ts_device *dev,
 		checksum = checksum_u8(buf, TS_CFG_HEAD_LEN);
 	}
 	if (checksum) {
-		ts_err("Config head checksum err:0x%x,data:%*ph",
-				checksum, TS_CFG_HEAD_LEN, buf);
+		ts_err("Config head checksum err:0x%x,data:%*ph", checksum,
+		       TS_CFG_HEAD_LEN, buf);
 		ret = -EINVAL;
 		goto err_out;
 	}
 
-	ts_debug("config_version:%u, vub_bags:%u",
-			buf[0], sub_bags);
+	ts_debug("config_version:%u, vub_bags:%u", buf[0], sub_bags);
 	for (i = 0; i < sub_bags; i++) {
 		/* read sub head [0]: sub bag num, [1]: sub bag length */
 		ret = goodix_i2c_read(dev, base_addr + offset, buf + offset, 2);
@@ -1296,10 +1302,10 @@ static int _goodix_do_read_config(struct goodix_ts_device *dev,
 		else
 			subbag_len = buf[offset + 1];
 
-		ts_debug("sub bag num:%u,sub bag length:%u", buf[offset], subbag_len);
+		ts_debug("sub bag num:%u,sub bag length:%u", buf[offset],
+			 subbag_len);
 		ret = goodix_i2c_read(dev, base_addr + offset + 2,
-							buf + offset + 2,
-							subbag_len + 1);
+				      buf + offset + 2, subbag_len + 1);
 		if (ret)
 			goto err_out;
 		checksum = checksum_u8(buf + offset, subbag_len + 3);
@@ -1309,8 +1315,8 @@ static int _goodix_do_read_config(struct goodix_ts_device *dev,
 			goto err_out;
 		}
 		offset += subbag_len + 3;
-		ts_debug("sub bag %d, data:%*ph", buf[offset], buf[offset + 1] + 3,
-				 buf + offset);
+		ts_debug("sub bag %d, data:%*ph", buf[offset],
+			 buf[offset + 1] + 3, buf + offset);
 	}
 	ret = offset;
 
@@ -1323,8 +1329,8 @@ err_out:
 }
 
 /* success return config_len, <= 0 failed */
-static int goodix_read_config(struct goodix_ts_device *dev,
-					      u8 *config_data, u32 config_len)
+static int goodix_read_config(struct goodix_ts_device *dev, u8 *config_data,
+			      u32 config_len)
 {
 	struct goodix_ts_cmd ts_cmd;
 	u8 cmd_flag;
@@ -1367,7 +1373,8 @@ static int goodix_read_config(struct goodix_ts_device *dev,
 		goto exit;
 	}
 	/* wait for config data ready */
-	if (goodix_wait_cfg_cmd_ready(dev, COMMAND_READ_CFG_PREPARE_OK, COMMAND_START_READ_CFG)) {
+	if (goodix_wait_cfg_cmd_ready(dev, COMMAND_READ_CFG_PREPARE_OK,
+				      COMMAND_START_READ_CFG)) {
 		ts_err("Wait for config data ready timeout");
 		r = -EAGAIN;
 		goto exit;
@@ -1411,8 +1418,8 @@ static int goodix_hw_init(struct goodix_ts_device *ts_dev)
 	ts_debug("goodix_hw_init");
 	/* goodix_hw_init may be called many times */
 	if (!ts_dev->normal_cfg) {
-		ts_dev->normal_cfg = devm_kzalloc(ts_dev->dev,
-				sizeof(*ts_dev->normal_cfg), GFP_KERNEL);
+		ts_dev->normal_cfg = devm_kzalloc(
+			ts_dev->dev, sizeof(*ts_dev->normal_cfg), GFP_KERNEL);
 		if (!ts_dev->normal_cfg) {
 			ts_err("Failed to alloc memory for normal cfg");
 			return -ENOMEM;
@@ -1420,15 +1427,16 @@ static int goodix_hw_init(struct goodix_ts_device *ts_dev)
 		mutex_init(&ts_dev->normal_cfg->lock);
 	}
 	if (!ts_dev->highsense_cfg) {
-		ts_dev->highsense_cfg = devm_kzalloc(ts_dev->dev,
-				sizeof(*ts_dev->highsense_cfg), GFP_KERNEL);
+		ts_dev->highsense_cfg =
+			devm_kzalloc(ts_dev->dev,
+				     sizeof(*ts_dev->highsense_cfg),
+				     GFP_KERNEL);
 		if (!ts_dev->highsense_cfg) {
 			ts_err("Failed to alloc memory for high sense cfg");
 			return -ENOMEM;
 		}
 		mutex_init(&ts_dev->highsense_cfg->lock);
 	}
-
 
 	/*for Nanjing IC, close HID_I2C mode when driver is probed*/
 	if (ts_dev->ic_type == IC_TYPE_NANJING) {
@@ -1445,12 +1453,11 @@ static int goodix_hw_init(struct goodix_ts_device *ts_dev)
 	/* devicetree property like resolution(panel_max_xxx)
 	 * may be different between sensors, here we try to parse
 	 * parameters form sensor child node */
-	r = goodix_parse_customize_params(ts_dev,
-			ts_dev->board_data,
-			ts_dev->chip_version.sensor_id);
+	r = goodix_parse_customize_params(ts_dev, ts_dev->board_data,
+					  ts_dev->chip_version.sensor_id);
 	if (r < 0)
 		ts_debug("Cann't find customized parameters");
-	
+
 	ts_dev->normal_cfg->delay = 500;
 	/* send normal-cfg to firmware */
 	r = goodix_send_config(ts_dev, ts_dev->normal_cfg);
@@ -1466,7 +1473,7 @@ static int goodix_hw_init(struct goodix_ts_device *ts_dev)
  */
 int goodix_hw_reset(struct goodix_ts_device *dev)
 {
-	u8 data[2] = {0x00};
+	u8 data[2] = { 0x00 };
 	int r = 0;
 
 	ts_debug("HW reset");
@@ -1500,21 +1507,17 @@ int goodix_hw_reset(struct goodix_ts_device *dev)
 		goodix_i2c_write(dev, 0x824d, data, 2);
 	}
 
-
 	/*init static esd*/
 	data[0] = GOODIX_ESD_TICK_WRITE_DATA;
 	if (dev->ic_type == IC_TYPE_NANJING) {
-		r = goodix_i2c_write(dev,
-					0x8043, data, 1);
+		r = goodix_i2c_write(dev, 0x8043, data, 1);
 		if (r < 0)
 			ts_err("nanjing reset, init static esd FAILED, i2c wirte ERROR");
 	}
 
 	/*init dynamic esd*/
 	if (dev->reg.esd) {
-		r = goodix_i2c_write_trans(dev,
-				dev->reg.esd,
-				data, 1);
+		r = goodix_i2c_write_trans(dev, dev->reg.esd, data, 1);
 		if (r < 0)
 			ts_err("IC reset, init dynamic esd FAILED, i2c write ERROR");
 	} else
@@ -1531,16 +1534,17 @@ int goodix_hw_reset(struct goodix_ts_device *dev)
  * Returns 0 - succeed,<0 - failed
  */
 static int goodix_request_handler(struct goodix_ts_device *dev,
-		struct goodix_request_data *request_data)
+				  struct goodix_request_data *request_data)
 {
 	unsigned char buffer[1];
 	int r;
 
-	if (dev->reg.fw_request != 0x6F6D){
+	if (dev->reg.fw_request != 0x6F6D) {
 		ts_debug("firmware reg is wrong!\n");
 		dev->reg.fw_request = 0x6F6D;
 	}
-	r = goodix_i2c_read_trans(dev, dev->reg.fw_request, buffer, 1);/*TS_REG_REQUEST*/
+	r = goodix_i2c_read_trans(dev, dev->reg.fw_request, buffer,
+				  1); /*TS_REG_REQUEST*/
 	if (r < 0)
 		return r;
 
@@ -1569,7 +1573,8 @@ static int goodix_request_handler(struct goodix_ts_device *dev,
 
 clear_requ:
 	buffer[0] = 0x00;
-	r = goodix_i2c_write_trans(dev, dev->reg.fw_request, buffer, 1);/*TS_REG_REQUEST*/
+	r = goodix_i2c_write_trans(dev, dev->reg.fw_request, buffer,
+				   1); /*TS_REG_REQUEST*/
 	return r;
 }
 
@@ -1577,8 +1582,7 @@ clear_requ:
  */
 
 static void goodix_swap_coords(struct goodix_ts_device *dev,
-		struct goodix_ts_coords *coords,
-		int touch_num)
+			       struct goodix_ts_coords *coords, int touch_num)
 {
 	int i, temp;
 	struct goodix_ts_board_data *bdata = dev->board_data;
@@ -1596,17 +1600,17 @@ static void goodix_swap_coords(struct goodix_ts_device *dev,
 	}
 }
 
-static int goodix_remap_trace_id(struct goodix_ts_device *dev,
-		u8 *coor_buf, u32 coor_buf_len, int touch_num)
+static int goodix_remap_trace_id(struct goodix_ts_device *dev, u8 *coor_buf,
+				 u32 coor_buf_len, int touch_num)
 {
-	static u8 remap_array[20] = {0xff, 0xff, 0xff, 0xff, 0xff,
-		0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-		0xff, 0xff, 0xff, 0xff, 0xff};
+	static u8 remap_array[20] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+				      0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+				      0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 	int i, j;
 	int offset = 0;
 	bool need_leave = false;
 	bool need_add = false;
-	u8 temp_buf[BYTES_PER_COORD] = {0x00};
+	u8 temp_buf[BYTES_PER_COORD] = { 0x00 };
 	u8 *small;
 	bool need_swap = false;
 	int max_touch_num = dev->board_data->panel_max_id;
@@ -1617,7 +1621,8 @@ static int goodix_remap_trace_id(struct goodix_ts_device *dev,
 	}
 
 	if (!coor_buf || coor_buf_len > (2 + BYTES_PER_COORD * max_touch_num)) {
-		ts_err("touch data buff error, !coor_buf:%d, len:%d", !coor_buf, coor_buf_len);
+		ts_err("touch data buff error, !coor_buf:%d, len:%d", !coor_buf,
+		       coor_buf_len);
 		return 0;
 	}
 
@@ -1686,13 +1691,13 @@ static int goodix_remap_trace_id(struct goodix_ts_device *dev,
 				}
 			}
 			if (j >= sizeof(remap_array)) {
-				ts_err("remap ERROR!!trace id:%d", coor_buf[offset]);
+				ts_err("remap ERROR!!trace id:%d",
+				       coor_buf[offset]);
 				ts_err("remap_array:%*ph",
-						(int)sizeof(remap_array), remap_array);
+				       (int)sizeof(remap_array), remap_array);
 			}
 			offset += BYTES_PER_COORD;
 		}
-	
 	}
 
 	/*for (i = 0; i < touch_num; i++) {
@@ -1716,12 +1721,10 @@ static int goodix_remap_trace_id(struct goodix_ts_device *dev,
 		/*swap*/
 		if (need_swap) {
 			memcpy(temp_buf, small, BYTES_PER_COORD);
-			memcpy(small,
-					&coor_buf[BYTES_PER_COORD * i],
-					BYTES_PER_COORD);
-			memcpy(&coor_buf[BYTES_PER_COORD * i],
-					temp_buf,
-					BYTES_PER_COORD);
+			memcpy(small, &coor_buf[BYTES_PER_COORD * i],
+			       BYTES_PER_COORD);
+			memcpy(&coor_buf[BYTES_PER_COORD * i], temp_buf,
+			       BYTES_PER_COORD);
 		}
 	}
 
@@ -1745,8 +1748,8 @@ static int goodix_remap_trace_id(struct goodix_ts_device *dev,
  */
 
 static int goodix_touch_handler(struct goodix_ts_device *dev,
-		struct goodix_ts_event *ts_event,
-		u8 *pre_buf, u32 pre_buf_len)
+				struct goodix_ts_event *ts_event, u8 *pre_buf,
+				u32 pre_buf_len)
 {
 	struct goodix_touch_data *touch_data = &ts_event->event_data.touch_data;
 	struct goodix_ts_coords *coords = &(touch_data->coords[0]);
@@ -1773,10 +1776,12 @@ static int goodix_touch_handler(struct goodix_ts_device *dev,
 		touch_num = -EINVAL;
 		goto exit_clean_sta;
 	} else if (unlikely(touch_num > 1)) {
-		r = goodix_i2c_read_trans(dev,
-				dev->reg.coor + 4 + BYTES_PER_COORD,/*TS_REG_COORDS_BASE*/
-				&buffer[4 + BYTES_PER_COORD],
-				(touch_num - 1) * BYTES_PER_COORD);
+		r = goodix_i2c_read_trans(
+			dev,
+			dev->reg.coor + 4 +
+				BYTES_PER_COORD, /*TS_REG_COORDS_BASE*/
+			&buffer[4 + BYTES_PER_COORD],
+			(touch_num - 1) * BYTES_PER_COORD);
 		if (unlikely(r < 0))
 			goto exit_clean_sta;
 	}
@@ -1785,10 +1790,10 @@ static int goodix_touch_handler(struct goodix_ts_device *dev,
 	 * + 1(checksum) + 1(key value) */
 	if (dev->ic_type == IC_TYPE_NANJING) {
 		chksum = checksum_u8(&buffer[1],
-				touch_num * BYTES_PER_COORD + 3);
+				     touch_num * BYTES_PER_COORD + 3);
 	} else {
 		chksum = checksum_u8(&buffer[0],
-				touch_num * BYTES_PER_COORD + 4);
+				     touch_num * BYTES_PER_COORD + 4);
 	}
 	if (unlikely(chksum != 0)) {
 		ts_err("Checksum error:%X, ic_type:%d", chksum, dev->ic_type);
@@ -1796,14 +1801,16 @@ static int goodix_touch_handler(struct goodix_ts_device *dev,
 		goto exit_clean_sta;
 	}
 
-	touch_data->have_key = false;/*clear variable*/
-	touch_data->key_value = 0;/*clear variable*/
+	touch_data->have_key = false; /*clear variable*/
+	touch_data->key_value = 0; /*clear variable*/
 	touch_data->have_key = (coord_sta >> 4) & 0x01;
 	if (unlikely(touch_data->have_key)) {
 		touch_data->key_value = buffer[touch_num * BYTES_PER_COORD + 2];
 		if (dev->board_data->pen_enable)
-			touch_data->key_value = (touch_data->key_value & 0x0f) |
-				((touch_data->key_value & 0xf0) >> (4 - dev->board_data->tp_key_num));
+			touch_data->key_value =
+				(touch_data->key_value & 0x0f) |
+				((touch_data->key_value & 0xf0) >>
+				 (4 - dev->board_data->tp_key_num));
 	}
 	/*ts_debug("$$$$$$coord_sta:0x%02x, have_key:%d, key_value:0x%02x",
 			coord_sta, touch_data->have_key, touch_data->key_value);*/
@@ -1821,9 +1828,8 @@ static int goodix_touch_handler(struct goodix_ts_device *dev,
 	/*remap trace id*/
 	if (dev->ic_type == IC_TYPE_NANJING)
 		goodix_remap_trace_id(dev, &buffer[2],
-				2 + BYTES_PER_COORD * max_touch_num,
-				touch_num);
-
+				      2 + BYTES_PER_COORD * max_touch_num,
+				      touch_num);
 
 	/*clear buffer*/
 	memset(touch_data->coords, 0x00, sizeof(touch_data->coords));
@@ -1835,9 +1841,9 @@ static int goodix_touch_handler(struct goodix_ts_device *dev,
 		for (i = 0; i < touch_num - 1; i++) {
 			coords->id = buffer[i * BYTES_PER_COORD + 2] & 0x0f;
 			coords->x = buffer[i * BYTES_PER_COORD + 3] |
-							(buffer[i * BYTES_PER_COORD + 4] << 8);
+				    (buffer[i * BYTES_PER_COORD + 4] << 8);
 			coords->y = buffer[i * BYTES_PER_COORD + 5] |
-							(buffer[i * BYTES_PER_COORD + 6] << 8);
+				    (buffer[i * BYTES_PER_COORD + 6] << 8);
 			coords->w = buffer[i * BYTES_PER_COORD + 7];
 			coords->p = coords->w;
 			coords->overlapping_area = buffer[8];
@@ -1849,35 +1855,41 @@ static int goodix_touch_handler(struct goodix_ts_device *dev,
 		/*it's a pen*/
 		i = touch_num - 1;
 		//ts_err("%s:i=%d touch_num=%d\n",__func__,i,touch_num);
-		if (unlikely(touch_num >= 1 && buffer[i * BYTES_PER_COORD + 2] >= 0x80)) {
-			if (dev->board_data->pen_enable) {/*pen_enable*/
+		if (unlikely(touch_num >= 1 &&
+			     buffer[i * BYTES_PER_COORD + 2] >= 0x80)) {
+			if (dev->board_data->pen_enable) { /*pen_enable*/
 				touch_data->pen_down = true;
 				/*change pen's trace ID, let it equal to "panel_max_id - 1"*/
 				/*touch_data->pen_coords[0].id = dev->board_data->panel_max_id - 1;*/
-				touch_data->pen_coords[0].id = dev->board_data->panel_max_id * 2;
-				touch_data->pen_coords[0].x = buffer[i * BYTES_PER_COORD + 3] |
+				touch_data->pen_coords[0].id =
+					dev->board_data->panel_max_id * 2;
+				touch_data->pen_coords[0].x =
+					buffer[i * BYTES_PER_COORD + 3] |
 					(buffer[i * BYTES_PER_COORD + 4] << 8);
-				touch_data->pen_coords[0].y = buffer[i * BYTES_PER_COORD + 5] |
+				touch_data->pen_coords[0].y =
+					buffer[i * BYTES_PER_COORD + 5] |
 					(buffer[i * BYTES_PER_COORD + 6] << 8);
-				touch_data->pen_coords[0].w = buffer[i * BYTES_PER_COORD + 7];
-				touch_data->pen_coords[0].p = touch_data->pen_coords[0].w;
-				}
-			} else {/*it's a finger*/
-					coords->id = buffer[i * BYTES_PER_COORD + 2] & 0x0f;
-					coords->x = buffer[i * BYTES_PER_COORD + 3] |
-									(buffer[i * BYTES_PER_COORD + 4] << 8);
-					coords->y = buffer[i * BYTES_PER_COORD + 5] |
-									(buffer[i * BYTES_PER_COORD + 6] << 8);
-					coords->w = buffer[i * BYTES_PER_COORD + 7];
-					coords->p = coords->w;
-					coords->overlapping_area = buffer[8];
-					coords->area = buffer[i * BYTES_PER_COORD + 9];
-					/*ts_debug("EF:[%d](%d, %d)", coords->id, coords->x, coords->y);*/
-					if (touch_data->pen_down == true) {
-						touch_data->pen_down = false;
-						/*ts_debug("***pen leave");*/
-				}
+				touch_data->pen_coords[0].w =
+					buffer[i * BYTES_PER_COORD + 7];
+				touch_data->pen_coords[0].p =
+					touch_data->pen_coords[0].w;
 			}
+		} else { /*it's a finger*/
+			coords->id = buffer[i * BYTES_PER_COORD + 2] & 0x0f;
+			coords->x = buffer[i * BYTES_PER_COORD + 3] |
+				    (buffer[i * BYTES_PER_COORD + 4] << 8);
+			coords->y = buffer[i * BYTES_PER_COORD + 5] |
+				    (buffer[i * BYTES_PER_COORD + 6] << 8);
+			coords->w = buffer[i * BYTES_PER_COORD + 7];
+			coords->p = coords->w;
+			coords->overlapping_area = buffer[8];
+			coords->area = buffer[i * BYTES_PER_COORD + 9];
+			/*ts_debug("EF:[%d](%d, %d)", coords->id, coords->x, coords->y);*/
+			if (touch_data->pen_down == true) {
+				touch_data->pen_down = false;
+				/*ts_debug("***pen leave");*/
+			}
+		}
 	}
 
 	/*swap coord*/
@@ -1897,7 +1909,7 @@ exit_clean_sta:
 }
 
 static int goodix_event_handler(struct goodix_ts_device *dev,
-		struct goodix_ts_event *ts_event)
+				struct goodix_ts_event *ts_event)
 {
 	unsigned char pre_buf[4 + BYTES_PER_COORD];
 	unsigned char event_sta;
@@ -1907,8 +1919,8 @@ static int goodix_event_handler(struct goodix_ts_device *dev,
 
 	/*memset(pre_buf, 0, sizeof(pre_buf));*/
 
-	r = goodix_i2c_read_trans(dev, dev->reg.coor,
-			pre_buf, 4 + BYTES_PER_COORD);
+	r = goodix_i2c_read_trans(dev, dev->reg.coor, pre_buf,
+				  4 + BYTES_PER_COORD);
 	if (unlikely(r < 0))
 		return r;
 
@@ -1918,15 +1930,13 @@ static int goodix_event_handler(struct goodix_ts_device *dev,
 
 	if (likely((event_sta & GOODIX_TOUCH_EVENT) == GOODIX_TOUCH_EVENT)) {
 		/*handle touch event*/
-		goodix_touch_handler(dev,
-				ts_event,
-				pre_buf,
-				4 + BYTES_PER_COORD);
-	} else if (unlikely((event_sta & GOODIX_REQUEST_EVENT) == GOODIX_REQUEST_EVENT)) {
+		goodix_touch_handler(dev, ts_event, pre_buf,
+				     4 + BYTES_PER_COORD);
+	} else if (unlikely((event_sta & GOODIX_REQUEST_EVENT) ==
+			    GOODIX_REQUEST_EVENT)) {
 		/* handle request event */
 		ts_event->event_type = EVENT_REQUEST;
-		goodix_request_handler(dev,
-				&ts_event->event_data.request_data);
+		goodix_request_handler(dev, &ts_event->event_data.request_data);
 	} else if ((event_sta & GOODIX_GESTURE_EVENT) == GOODIX_GESTURE_EVENT) {
 		/* handle gesture event */
 		ts_debug("Gesture event");
@@ -1940,7 +1950,6 @@ static int goodix_event_handler(struct goodix_ts_device *dev,
 
 	return r;
 }
-
 
 /**
  * goodix_hw_suspend - Let touch deivce stay in lowpower mode.
@@ -1972,7 +1981,7 @@ static int goodix_hw_resume(struct goodix_ts_device *dev)
 {
 	int r = 0, i, retry = GOODIX_BUS_RETRY_TIMES;
 	u8 temp_buf[256], checksum;
-	u8 data[2] = {0x00};
+	u8 data[2] = { 0x00 };
 
 	for (; retry > 0; retry--) {
 		/*resume IC*/
@@ -1984,7 +1993,8 @@ static int goodix_hw_resume(struct goodix_ts_device *dev)
 			msleep(150);
 			/*2. check resume success or not*/
 			for (i = 0; i < 10; i++) {
-				r = goodix_i2c_read(dev, dev->reg.command, data, 1);
+				r = goodix_i2c_read(dev, dev->reg.command, data,
+						    1);
 				if (!r && data[0] == 0xff)
 					break;
 				msleep(20);
@@ -2006,7 +2016,7 @@ static int goodix_hw_resume(struct goodix_ts_device *dev)
 		/*read version and check checksum*/
 		if (dev->reg.version_base && dev->reg.version_len < 256) {
 			r = goodix_i2c_read(dev, dev->reg.version_base,
-					temp_buf, dev->reg.version_len);
+					    temp_buf, dev->reg.version_len);
 			if (r < 0)
 				continue;
 
@@ -2032,11 +2042,9 @@ static int goodix_esd_check(struct goodix_ts_device *dev)
 
 	/*check dynamic esd*/
 	if (dev->ic_type == IC_TYPE_NORMANDY)
-		r = dev->hw_ops->read_trans(dev,
-				TS_REG_ESD_TICK_R, &data, 1);
+		r = dev->hw_ops->read_trans(dev, TS_REG_ESD_TICK_R, &data, 1);
 	else
-		r = dev->hw_ops->read_trans(dev,
-				dev->reg.esd, &data, 1);
+		r = dev->hw_ops->read_trans(dev, dev->reg.esd, &data, 1);
 
 	if (r < 0 || (data == GOODIX_ESD_TICK_WRITE_DATA)) {
 		ts_debug("dynamic esd occur, r:%d, data:0x%02x", r, data);
@@ -2046,11 +2054,11 @@ static int goodix_esd_check(struct goodix_ts_device *dev)
 
 	/*check static esd*/
 	if (dev->ic_type == IC_TYPE_NANJING) {
-		r = dev->hw_ops->read_trans(dev,
-				0x8043, &data, 1);
+		r = dev->hw_ops->read_trans(dev, 0x8043, &data, 1);
 
 		if (r < 0 || (data != 0xaa)) {
-			ts_debug("static esd occur, r:%d, data:0x%02x", r, data);
+			ts_debug("static esd occur, r:%d, data:0x%02x", r,
+				 data);
 			r = -EINVAL;
 			goto exit;
 		}
@@ -2087,21 +2095,21 @@ static void goodix_pdev_release(struct device *dev)
 }
 
 static int goodix_i2c_probe(struct i2c_client *client,
-	const struct i2c_device_id *dev_id)
+			    const struct i2c_device_id *dev_id)
 {
 	struct goodix_ts_device *ts_device = NULL;
 	struct goodix_ts_board_data *ts_bdata = NULL;
 	int r = 0;
 
-	ts_err("enter::%s\n",__func__);
+	ts_err("enter::%s\n", __func__);
 
-	r = i2c_check_functionality(client->adapter,I2C_FUNC_I2C);
+	r = i2c_check_functionality(client->adapter, I2C_FUNC_I2C);
 	if (!r)
 		return -EIO;
 
 	/* board data */
-	ts_bdata = devm_kzalloc(&client->dev,
-			sizeof(struct goodix_ts_board_data), GFP_KERNEL);
+	ts_bdata = devm_kzalloc(
+		&client->dev, sizeof(struct goodix_ts_board_data), GFP_KERNEL);
 	if (!ts_bdata)
 		return -ENOMEM;
 
@@ -2112,11 +2120,11 @@ static int goodix_i2c_probe(struct i2c_client *client,
 			return r;
 	}
 #ifdef CONFIG_ACPI
-	 else if (ACPI_COMPANION(&client->dev)) {
+	else if (ACPI_COMPANION(&client->dev)) {
 		r = goodix_parse_acpi(&client->dev, ts_bdata);
 		if (r < 0)
 			return r;
-	 }
+	}
 #endif
 	else {
 		/* use platform data */
@@ -2127,17 +2135,15 @@ static int goodix_i2c_probe(struct i2c_client *client,
 	if (!ts_bdata)
 		return -ENODEV;
 
-	ts_device = devm_kzalloc(&client->dev,
-		sizeof(struct goodix_ts_device), GFP_KERNEL);
+	ts_device = devm_kzalloc(&client->dev, sizeof(struct goodix_ts_device),
+				 GFP_KERNEL);
 	if (!ts_device)
 		return -ENOMEM;
-
 
 	ts_device->name = "GTx5 TouchDevcie";
 	ts_device->dev = &client->dev;
 	ts_device->board_data = ts_bdata;
 	ts_device->hw_ops = &hw_i2c_ops;
-	
 
 	/* ts core device */
 	goodix_pdev = kzalloc(sizeof(struct platform_device), GFP_KERNEL);
@@ -2172,7 +2178,9 @@ static int goodix_i2c_remove(struct i2c_client *client)
 
 #ifdef CONFIG_OF
 static const struct of_device_id i2c_matchs[] = {
-	{.compatible = TS_DT_COMPATIBLE,},
+	{
+		.compatible = TS_DT_COMPATIBLE,
+	},
 	{},
 };
 MODULE_DEVICE_TABLE(of, i2c_matchs);
@@ -2180,27 +2188,28 @@ MODULE_DEVICE_TABLE(of, i2c_matchs);
 
 #ifdef CONFIG_ACPI
 static const struct acpi_device_id acpi_matchs[] = {
-	{.id = "PNPxxx"},
+	{ .id = "PNPxxx" },
 	{},
 };
 MODULE_DEVICE_TABLE(acpi, acpi_matchs);
 #endif
 
 static const struct i2c_device_id i2c_id_table[] = {
-	{TS_DRIVER_NAME, 0},
+	{ TS_DRIVER_NAME, 0 },
 	{},
 };
 MODULE_DEVICE_TABLE(i2c, i2c_id_table);
 
 static struct i2c_driver goodix_i2c_driver = {
-	.driver = {
-		.name = TS_DRIVER_NAME,
-		.owner = THIS_MODULE,
-		.of_match_table = of_match_ptr(i2c_matchs),
+	.driver =
+		{
+			.name = TS_DRIVER_NAME,
+			.owner = THIS_MODULE,
+			.of_match_table = of_match_ptr(i2c_matchs),
 #ifdef CONFIG_ACPI
-		.acpi_match_table = acpi_matchs,
+			.acpi_match_table = acpi_matchs,
 #endif
-	},
+		},
 	.probe = goodix_i2c_probe,
 	.remove = goodix_i2c_remove,
 	.id_table = i2c_id_table,
