@@ -16,7 +16,7 @@ int schedtune_cpu_boost(int cpu);
 int schedtune_task_boost(struct task_struct *tsk);
 
 int schedtune_prefer_idle(struct task_struct *tsk);
-int schedtune_prefer_high_cap(struct task_struct *tsk);
+int schedtune_prefer_high_cap(struct task_struct *tsk, bool rcu_lock);
 
 void schedtune_enqueue_task(struct task_struct *p, int cpu);
 void schedtune_dequeue_task(struct task_struct *p, int cpu);

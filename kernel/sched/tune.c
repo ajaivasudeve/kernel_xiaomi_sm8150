@@ -636,7 +636,7 @@ boost_write(struct cgroup_subsys_state *css, struct cftype *cft,
 	return 0;
 }
 
-int schedtune_prefer_high_cap(struct task_struct *p)
+int schedtune_prefer_high_cap(struct task_struct *p, bool rcu_lock)
 {
 	struct schedtune *st;
 	int prefer_high_cap;
@@ -645,10 +645,12 @@ int schedtune_prefer_high_cap(struct task_struct *p)
 		return 0;
 
 	/* Get prefer_high_cap value */
-	rcu_read_lock();
+	if (rcu_lock)
+		rcu_read_lock();
 	st = task_schedtune(p);
 	prefer_high_cap = st->prefer_high_cap;
-	rcu_read_unlock();
+	if (rcu_lock)
+		rcu_read_unlock();
 
 	return prefer_high_cap;
 }
