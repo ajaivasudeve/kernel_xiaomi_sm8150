@@ -815,6 +815,7 @@ static ssize_t devkmsg_write(struct kiocb *iocb, struct iov_iter *from)
 			line = endp;
 			/* QG-D */
 			if (strstr(line, "healthd")||
+				strstr(line, "Untracked pid")||
 				strstr(line, "cacert") ||
 				!strcmp(line, "CP: Couldn't"))
 				goto free;
