@@ -22,6 +22,7 @@
 #include <linux/slab.h>
 #include <linux/input.h>
 #include <linux/time.h>
+#include <linux/devfreq_boost.h>
 
 #define IB_DURATION 150
 #define FRAME_BOOST_TIMEOUT 5000
@@ -188,7 +189,13 @@ static void cpuboost_input_event(struct input_handle *handle,
 	if (work_pending(&input_boost_work))
 		return;
 
-	queue_work(cpu_boost_wq, &input_boost_work);
+	if (type == EV_KEY && code == KEY_POWER) {
+		input_boost_max_kick(1000);
+		devfreq_boost_kick_max(DEVFREQ_MSM_LLCCBW, 1000);
+		devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 1000);
+	} else {
+		queue_work(cpu_boost_wq, &input_boost_work);
+	}
 }
 
 static int cpuboost_input_connect(struct input_handler *handler,
