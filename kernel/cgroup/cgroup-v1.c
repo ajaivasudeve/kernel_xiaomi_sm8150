@@ -13,6 +13,8 @@
 #include <linux/delayacct.h>
 #include <linux/pid_namespace.h>
 #include <linux/cgroupstats.h>
+#include <linux/cpu_boost.h>
+#include <linux/devfreq_boost.h>
 
 #include <trace/events/cgroup.h>
 
@@ -534,6 +536,8 @@ static ssize_t __cgroup1_procs_write(struct kernfs_open_file *of,
 	if (ret)
 		goto out_unlock;
 
+
+
 	/*
 	 * Even if we're attaching all tasks in the thread group, we only
 	 * need to check permissions on one of them.
@@ -550,6 +554,14 @@ static ssize_t __cgroup1_procs_write(struct kernfs_open_file *of,
 		goto out_finish;
 
 	ret = cgroup_attach_task(cgrp, task, threadgroup);
+
+	/* Boost CPU and cpubw to the max for 2000ms when any app becomes a top app */
+	if (!ret && !memcmp(cgrp->kn->name, "top-app", sizeof("top-app"))) {
+		input_boost_max_kick(2000);
+		devfreq_boost_kick_max(DEVFREQ_MSM_LLCCBW, 2000);
+		devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 2000);
+
+	}
 
 out_finish:
 	cgroup_procs_write_finish(task);
