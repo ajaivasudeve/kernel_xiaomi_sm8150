@@ -277,23 +277,11 @@ static void dsi_bridge_pre_enable(struct drm_bridge *bridge)
  *  In order to improve panel light on performance when unlock device by
  *  fingerprint, export this interface for fingerprint.Once finger touch
  *  happened, it could light on LCD panel in advance of android resume.
- *
- *  @timeout: DSI bridge wait time for android resume and set panel on.
- *            If timeout, dsi bridge will disable panel to avoid fingerprint
- *            touch by mistake.
  */
 
-int dsi_bridge_interface_enable(int timeout)
+int dsi_bridge_interface_enable()
 {
 	int ret = 0;
-
-	ret = wait_event_timeout(resume_wait_q,
-		!atomic_read(&resume_pending),
-		msecs_to_jiffies(WAIT_RESUME_TIMEOUT));
-	if (!ret) {
-		pr_debug("Primary fb resume timeout\n");
-		return -ETIMEDOUT;
-	}
 
 	mutex_lock(&gbridge->base.lock);
 
@@ -304,13 +292,10 @@ int dsi_bridge_interface_enable(int timeout)
 
 	gbridge->base.dev->fp_quickon = true;
 
-	__pm_stay_awake(&prim_panel_wakelock);
+	__pm_wakeup_event(&prim_panel_wakelock, 2000);
 	dsi_bridge_pre_enable(&gbridge->base);
 
-	if (timeout > 0)
-		schedule_delayed_work(&prim_panel_work, msecs_to_jiffies(timeout));
-	else
-		__pm_relax(&prim_panel_wakelock);
+	schedule_delayed_work(&prim_panel_work, 0);
 
 	mutex_unlock(&gbridge->base.lock);
 	return ret;
