@@ -49,6 +49,8 @@
 #ifndef GOODIX_DRM_INTERFACE_WA
 #include <linux/msm_drm_notify.h>
 #endif
+#include <linux/cpu_boost.h>
+#include <linux/devfreq_boost.h>
 
 #include "gf_spi.h"
 
@@ -558,6 +560,9 @@ static irqreturn_t gf_irq(int irq, void *handle)
 	char temp[4] = { 0x0 };
 	uint32_t key_input = 0;
 	temp[0] = GF_NET_EVENT_IRQ;
+	input_boost_max_kick(1000);
+	devfreq_boost_kick_max(DEVFREQ_MSM_LLCCBW, 1000);
+	devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 1000);
 	pr_debug("%s enter\n", __func__);
 	__pm_wakeup_event(&fp_wakelock, WAKELOCK_HOLD_TIME);
 	sendnlmsg(temp);
