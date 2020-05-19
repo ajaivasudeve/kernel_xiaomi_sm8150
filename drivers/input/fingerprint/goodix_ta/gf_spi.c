@@ -435,7 +435,7 @@ static long gf_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 
 	case GF_IOC_RESET:
 		pr_debug("%s GF_IOC_RESET.\n", __func__);
-		gf_hw_reset(gf_dev, 3);
+		gf_hw_reset(gf_dev);
 		break;
 
 	case GF_IOC_INPUT_KEY_EVENT:
@@ -639,7 +639,7 @@ static int gf_open(struct inode *inode, struct file *filp)
 			goto open_error1;
 		}
 
-		gpio_direction_output(gf_dev->reset_gpio, 0);
+		gpio_direction_output(gf_dev->reset_gpio, 1);
 		rc = gpio_request(gf_dev->irq_gpio, "goodix_irq");
 
 		if (rc) {

@@ -23,6 +23,9 @@
 #include <linux/platform_device.h>
 #endif
 
+#define SLEEP_MIN 6000
+#define SLEEP_MAX 8000
+
 int gf_parse_dts(struct gf_dev *gf_dev)
 {
 #ifdef GF_PW_CTL
@@ -124,18 +127,18 @@ int gf_power_off(struct gf_dev *gf_dev)
 	return rc;
 }
 
-int gf_hw_reset(struct gf_dev *gf_dev, unsigned int delay_ms)
+int gf_hw_reset(struct gf_dev *gf_dev)
 {
 	if (gf_dev == NULL) {
 		pr_debug("Input buff is NULL.\n");
 		return -EPERM;
 	}
 
-	gpio_direction_output(gf_dev->reset_gpio, 0);
-	mdelay(3);
+	gpio_set_value(gf_dev->reset_gpio, 0);
+	usleep_range(SLEEP_MIN, SLEEP_MAX);
 	gpio_set_value(gf_dev->reset_gpio, 1);
-	mdelay(delay_ms);
-	pr_debug("%s\n", __func__);
+	usleep_range(SLEEP_MIN, SLEEP_MAX);
+
 	return 0;
 }
 

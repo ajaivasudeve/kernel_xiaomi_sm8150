@@ -151,7 +151,7 @@ void gf_cleanup(struct gf_dev *gf_dev);
 int gf_power_on(struct gf_dev *gf_dev);
 int gf_power_off(struct gf_dev *gf_dev);
 
-int gf_hw_reset(struct gf_dev *gf_dev, unsigned int delay_ms);
+int gf_hw_reset(struct gf_dev *gf_dev);
 int gf_irq_num(struct gf_dev *gf_dev);
 
 void sendnlmsg(char *message);
