@@ -7416,11 +7416,11 @@ struct find_best_target_env {
 static bool is_packing_eligible(struct task_struct *p, int target_cpu,
 				struct find_best_target_env *fbt_env,
 				unsigned int target_cpus_count,
-				int best_idle_cstate, bool boosted)
+				int best_idle_cstate, bool prefer_high_cap)
 {
 	unsigned long tutil, estimated_capacity;
 
-	if (task_placement_boost_enabled(p) || fbt_env->need_idle || boosted)
+	if (task_placement_boost_enabled(p) || fbt_env->need_idle || prefer_high_cap)
 		return false;
 
 	if (best_idle_cstate == -1)
@@ -7445,13 +7445,13 @@ static bool is_packing_eligible(struct task_struct *p, int target_cpu,
 	return (estimated_capacity <= capacity_curr_of(target_cpu));
 }
 
-static int start_cpu(struct task_struct *p, bool boosted,
+static int start_cpu(struct task_struct *p, bool prefer_high_cap,
 		     bool sync_boost, struct cpumask *rtg_target)
 {
 	struct root_domain *rd = cpu_rq(smp_processor_id())->rd;
 	int start_cpu = -1;
 
-	if (boosted) {
+	if (prefer_high_cap) {
 		if (rd->mid_cap_orig_cpu != -1 &&
 		    task_fits_max(p, rd->mid_cap_orig_cpu))
 			return rd->mid_cap_orig_cpu;
