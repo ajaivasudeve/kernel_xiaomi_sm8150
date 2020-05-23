@@ -10,6 +10,7 @@
  * GNU General Public License for more details.
  */
 
+#ifdef CONFIG_SCHED_WALT
 #include "sched.h"
 #include "walt.h"
 #include <linux/of.h>
@@ -287,3 +288,15 @@ done:
 	mutex_unlock(&boost_mutex);
 	return ret;
 }
+#else
+#include "sched.h"
+
+unsigned int sysctl_sched_boost;
+
+int sched_boost_handler(struct ctl_table *table, int write,
+		void __user *buffer, size_t *lenp,
+		loff_t *ppos)
+{
+	return 0;
+}
+#endif
