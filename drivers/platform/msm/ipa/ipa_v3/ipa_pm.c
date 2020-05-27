@@ -405,8 +405,8 @@ static void activate_work_func(struct work_struct *work)
 	client = container_of(work, struct ipa_pm_client, activate_work);
 	if (!client->skip_clk_vote) {
 		IPA_ACTIVE_CLIENTS_INC_SPECIAL(client->name);
-		if (client->group == IPA_PM_GROUP_APPS)
-			__pm_stay_awake(&client->wlock);
+		/* if (client->group == IPA_PM_GROUP_APPS)
+			__pm_stay_awake(&client->wlock); */
 	}
 
 	spin_lock_irqsave(&client->state_lock, flags);
@@ -945,8 +945,8 @@ static int ipa_pm_activate_helper(struct ipa_pm_client *client, bool sync)
 	/* we got the clocks */
 	if (result == 0) {
 		client->state = IPA_PM_ACTIVATED;
-		if (client->group == IPA_PM_GROUP_APPS)
-			__pm_stay_awake(&client->wlock);
+		/* if (client->group == IPA_PM_GROUP_APPS)
+			__pm_stay_awake(&client->wlock); */
 		spin_unlock_irqrestore(&client->state_lock, flags);
 		activate_client(client->hdl);
 		if (sync)
